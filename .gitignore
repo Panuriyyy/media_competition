@@ -1,0 +1,33 @@
+# Виртуальные окружения
+.venv/
+venv/
+bot/bot/
+env/
+
+# Файлы конфигурации с токенами
+bot/config.py
+config.py
+*secret.py
+*.local
+
+# Базы данных
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE
+.vscode/
+.idea/
+
+# Логи
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление конкурсом</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Шапка -->
+        <div class="header">
+            <h1>Управление конкурсом</h1>
+            <button onclick="location.href='index.html'" class="create-btn">Создать задание</button>
+        </div>
+
+        <!-- Вкладки Задания/Пользователи -->
+        <div class="main-tabs">
+            <button class="main-tab active" onclick="showMainTab('tasks')">ЗАДАНИЯ</button>
+            <button class="main-tab" onclick="showMainTab('users')">ПОЛЬЗОВАТЕЛИ</button>
+        </div>
+
+        <!-- Блок с заданиями -->
+        <div id="tasks-block" class="tab-block" style="display: block;">
+            <!-- Подвкладки Активные/Архивные -->
+            <div class="task-tabs">
+                <button class="task-tab active" onclick="showTaskTab('active')">Активные</button>
+                <button class="task-tab" onclick="showTaskTab('archive')">Архивные</button>
+            </div>
+
+            <!-- Список активных заданий -->
+            <div id="active-tasks" class="tasks-container" style="display: block;">
+                <div id="active-list" class="tasks-grid"></div>
+            </div>
+
+            <!-- Список архивных заданий -->
+            <div id="archive-tasks" class="tasks-container" style="display: none;">
+                <div id="archive-list" class="tasks-grid"></div>
+            </div>
+        </div>
+
+        <!-- Блок с пользователями -->
+        <div id="users-block" class="tab-block" style="display: none;">
+            <h2 class="block-title">Зарегистрированные пользователи</h2>
+            
+            <!-- Поиск -->
+            <div class="search-box">
+                <input type="text" id="userSearch" placeholder="Поиск по имени, институту или группе...">
+                <button onclick="searchUsers()" class="search-btn">Найти</button>
+                <button onclick="resetSearch()" class="reset-btn">Сброс</button>
+            </div>
+
+            <!-- Статистика -->
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Всего:</span>
+                    <span class="stat-number" id="total-users">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Активных:</span>
+                    <span class="stat-number" id="active-users">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Заданий:</span>
+                    <span class="stat-number" id="total-completed">0</span>
+                </div>
+            </div>
+
+            <!-- Таблица пользователей -->
+            <div class="table-wrapper">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>VK ID</th>
+                            <th>ФИО</th>
+                            <th>Институт</th>
+                            <th>Группа</th>
+                            <th>Статус</th>
+                            <th>Заданий</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <tr><td colspan="6" class="loading-cell">Загрузка...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для редактирования задания -->
+<div id="editModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Редактирование задания</h2>
+            <span class="close-modal" onclick="closeEditModal()">&times;</span>
+        </div>
+        <form id="editForm">
+            <input type="hidden" id="edit-id">
+            
+            <div class="form-group">
+                <label>Название:</label>
+                <input type="text" id="edit-title" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Описание:</label>
+                <textarea id="edit-description" rows="4" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Тип задания:</label>
+                <select id="edit-task-type" onchange="toggleEditFields()">
+                    <option value="auto">Автоматическая проверка</option>
+                    <option value="manual">Ручная проверка</option>
+                </select>
+            </div>
+            
+            <div id="edit-auto-settings" class="form-group" style="display: none;">
+                <label>Тип автоматической проверки:</label>
+                <select id="edit-auto-type">
+                    <option value="likes">Лайки</option>
+                    <option value="comments">Комментарии</option>
+                </select>
+            </div>
+            
+            <div id="edit-format-block" class="form-group" style="display: none;">
+                <label>Формат файла:</label>
+                <select id="edit-file-format">
+                    <option value="PNG, JPG">PNG, JPG</option>
+                    <option value="MOV, MP3, MP4">MOV, MP3, MP4</option>
+                    <option value="DOC, DOCS, PDF, TXT">DOC, DOCS, PDF, TXT</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Дедлайн:</label>
+                <input type="datetime-local" id="edit-deadline" required>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="submit" class="save-btn">Сохранить</button>
+                <button type="button" class="cancel-btn" onclick="closeEditModal()">Отмена</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

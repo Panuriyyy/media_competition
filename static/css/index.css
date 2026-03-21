@@ -1,0 +1,344 @@
+@font-face {
+    font-family: 'Onest';
+    src: url('../fonts/Onest-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Onest';
+    src: url('../fonts/Onest-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Onest';
+    src: url('../fonts/Onest-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Onest';
+    src: url('../fonts/Onest-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Onest';
+    src: url('../fonts/Onest-Thin.ttf') format('truetype');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Onest';
+    src: url('../fonts/Onest-Black.ttf') format('truetype');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Onest';
+    src: url('../fonts/Onest-ExtraBold.ttf') format('truetype');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Onest';
+    src: url('../fonts/Onest-ExtraLight.ttf') format('truetype');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Onest';
+    src: url('../fonts/Onest-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Подключаем вариативный шрифт (если нужна тонкая настройка) */
+@font-face {
+    font-family: 'Onest Variable';
+    src: url('../fonts/Onest-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: 'Onest', sans-serif;
+    background-image: url('../media/background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.back-btn {
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    color: #233F26;
+    border: none;
+    border-radius: 5px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s;
+    padding: 0;
+    line-height: 1;
+}
+
+.back-btn:hover {
+    opacity: 0.9;
+}
+
+.form-container {
+    background-color: #233F26;
+    padding: 40px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 600px;
+    box-sizing: border-box;
+}
+
+.form-container h1 {
+    color: white;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+.form-container label {
+    color: white;
+    display: inline-block;
+    margin: 10px 0 5px 0;
+}
+
+.form-container input[type="text"],
+.form-container input[type="datetime-local"],
+.form-container textarea,
+.form-container select {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 15px 0;
+    border: none;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-family: 'Onest', sans-serif;
+}
+
+.form-container textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-container input[type="radio"] {
+    margin: 10px 5px 10px 0;
+}
+
+.form-container input[type="radio"] + label {
+    margin-right: 20px;
+}
+
+#auto_settings, #format_block {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.button-group input[type="submit"],
+.button-group input[type="reset"] {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: white;
+    color: #233F26;
+    font-family: 'Onest', sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.button-group input[type="submit"]:hover,
+.button-group input[type="reset"]:hover {
+    opacity: 0.9;
+}
+
+/* Стили для блока постов */
+#posts_block {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+#posts_block label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+#posts_container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.post-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.post-input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Onest', sans-serif;
+    font-size: 14px;
+    background-color: white;
+}
+
+.add-post-btn {
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    color: #233F26;
+    border: none;
+    border-radius: 5px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s;
+    flex-shrink: 0;
+}
+
+.add-post-btn:hover {
+    opacity: 0.9;
+}
+
+.hint {
+    display: block;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Стили для блока постов */
+#posts_block {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+#posts_block label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: white;
+}
+
+#posts_container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.post-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.post-input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Onest', sans-serif;
+    font-size: 14px;
+    background-color: white;
+}
+
+.add-post-btn, .delete-post-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 5px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+
+.add-post-btn {
+    background-color: white;
+    color: #233F26;
+}
+
+.delete-post-btn {
+    background-color: #f44336;
+    color: white;
+    font-size: 24px;
+}
+
+.add-post-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.delete-post-btn:hover {
+    background-color: #da190b;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.hint {
+    display: block;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    margin-top: 5px;
+}
