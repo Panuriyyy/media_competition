@@ -2,6 +2,7 @@ const API_URL = 'http://127.0.0.1:8001';
 let currentTasks = [];
 let currentUsers = [];
 let editingTaskId = null;
+let editRowCounter = 1; // Добавлено
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM загружен');
@@ -16,6 +17,30 @@ document.addEventListener('DOMContentLoaded', function() {
     loadUsers();
     setupEditForm();
 });
+
+// ========== ФУНКЦИИ ДЛЯ ПОСТОВ В МОДАЛЬНОМ ОКНЕ ==========
+function addEditPostRow() {
+    const container = document.getElementById('edit-posts-container');
+    if (!container) return;
+    
+    const row = document.createElement('div');
+    row.className = 'post-row';
+    row.id = `edit-post-row-${editRowCounter}`;
+    row.innerHTML = `
+        <input type="url" class="edit-post-input" placeholder="https://vk.com/wall...">
+        <button type="button" class="add-post-btn" onclick="addEditPostRow()">+</button>
+        <button type="button" class="delete-post-btn" onclick="deleteEditPostRow('edit-post-row-${editRowCounter}')">×</button>
+    `;
+    container.appendChild(row);
+    editRowCounter++;
+}
+
+function deleteEditPostRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) {
+        row.remove();
+    }
+}
 
 // ========== УПРАВЛЕНИЕ ВКЛАДКАМИ ==========
 function showMainTab(tabName) {
@@ -82,23 +107,15 @@ async function loadTasks() {
 function displayTasks() {
     const now = new Date();
     
-    console.log('Все задания:', currentTasks);
-    console.log('Текущее время:', now);
-    
     const activeTasks = currentTasks.filter(task => {
         const taskDeadline = new Date(task.deadline);
-        const isActive = task.is_active && taskDeadline > now;
-        return isActive;
+        return task.is_active && taskDeadline > now;
     });
     
     const archiveTasks = currentTasks.filter(task => {
         const taskDeadline = new Date(task.deadline);
-        const isArchive = !task.is_active || taskDeadline <= now;
-        return isArchive;
+        return !task.is_active || taskDeadline <= now;
     });
-
-    console.log('Активные:', activeTasks.length);
-    console.log('Архивные:', archiveTasks.length);
 
     displayTaskList('active-list', activeTasks, true);
     displayTaskList('archive-list', archiveTasks, false);
@@ -146,9 +163,11 @@ function toggleEditFields() {
     const taskType = document.getElementById('edit-task-type').value;
     const autoSettings = document.getElementById('edit-auto-settings');
     const formatBlock = document.getElementById('edit-format-block');
+    const postsBlock = document.getElementById('edit-posts-block');
     
     if (autoSettings) autoSettings.style.display = taskType === 'auto' ? 'block' : 'none';
     if (formatBlock) formatBlock.style.display = taskType === 'manual' ? 'block' : 'none';
+    if (postsBlock) postsBlock.style.display = taskType === 'auto' ? 'block' : 'none';
 }
 
 function setupEditForm() {
@@ -164,12 +183,22 @@ function setupEditForm() {
 
             const taskType = document.getElementById('edit-task-type').value;
             
+            // Собираем посты
+            const postInputs = document.querySelectorAll('#edit-posts-container .edit-post-input');
+            const posts = [];
+            postInputs.forEach(input => {
+                if (input.value.trim()) {
+                    posts.push(input.value.trim());
+                }
+            });
+            
             const taskData = {
                 title: document.getElementById('edit-title').value,
                 description: document.getElementById('edit-description').value,
                 task_type: taskType,
                 auto_type: taskType === 'auto' ? document.getElementById('edit-auto-type').value : null,
                 file_format: taskType === 'manual' ? document.getElementById('edit-file-format').value : null,
+                posts: posts,
                 deadline: new Date(document.getElementById('edit-deadline').value).toISOString(),
                 is_active: true
             };
@@ -211,6 +240,7 @@ function openEditModal(taskId) {
     }
     
     editingTaskId = taskId;
+    editRowCounter = 1; // Сбрасываем счетчик
     
     const elements = {
         id: document.getElementById('edit-id'),
@@ -230,6 +260,7 @@ function openEditModal(taskId) {
         }
     }
     
+    // Заполняем основные поля
     elements.id.value = task.id;
     elements.title.value = task.title;
     elements.description.value = task.description;
@@ -243,6 +274,39 @@ function openEditModal(taskId) {
         elements.fileFormat.value = task.file_format;
     }
     
+    // Заполняем посты
+    const postsContainer = document.getElementById('edit-posts-container');
+    if (postsContainer) {
+        postsContainer.innerHTML = '';
+        
+        const posts = task.posts || [];
+        
+        if (posts.length === 0) {
+            const row = document.createElement('div');
+            row.className = 'post-row';
+            row.id = 'edit-post-row-0';
+            row.innerHTML = `
+                <input type="url" class="edit-post-input" placeholder="https://vk.com/wall...">
+                <button type="button" class="add-post-btn" onclick="addEditPostRow()">+</button>
+            `;
+            postsContainer.appendChild(row);
+        } else {
+            posts.forEach((post, index) => {
+                const row = document.createElement('div');
+                row.className = 'post-row';
+                row.id = `edit-post-row-${index}`;
+                row.innerHTML = `
+                    <input type="url" class="edit-post-input" value="${post.replace(/"/g, '&quot;')}" placeholder="https://vk.com/wall...">
+                    <button type="button" class="add-post-btn" onclick="addEditPostRow()">+</button>
+                    <button type="button" class="delete-post-btn" onclick="deleteEditPostRow('edit-post-row-${index}')">×</button>
+                `;
+                postsContainer.appendChild(row);
+            });
+            editRowCounter = posts.length;
+        }
+    }
+    
+    // Форматируем дату
     const deadline = new Date(task.deadline);
     const year = deadline.getFullYear();
     const month = String(deadline.getMonth() + 1).padStart(2, '0');
@@ -255,7 +319,6 @@ function openEditModal(taskId) {
     
     const modal = document.getElementById('editModal');
     modal.style.display = 'block';
-    
     document.body.style.overflow = 'hidden';
 }
 
@@ -263,7 +326,6 @@ function closeEditModal() {
     const modal = document.getElementById('editModal');
     modal.style.display = 'none';
     editingTaskId = null;
-    
     document.body.style.overflow = 'auto';
 }
 
@@ -291,6 +353,7 @@ async function moveToArchive(taskId) {
                 task_type: task.task_type,
                 auto_type: task.auto_type,
                 file_format: task.file_format,
+                posts: task.posts || [],
                 deadline: task.deadline,
                 is_active: false
             })
@@ -298,7 +361,7 @@ async function moveToArchive(taskId) {
         
         if (response.ok) {
             alert('Задание перемещено в архив');
-            loadTasks(); // Просто вызываем loadTasks, не loadTasksForce
+            loadTasks();
         } else {
             const error = await response.json();
             alert('Ошибка: ' + (error.detail || 'Неизвестная ошибка'));
@@ -333,6 +396,7 @@ async function restoreTask(taskId) {
                 task_type: task.task_type,
                 auto_type: task.auto_type,
                 file_format: task.file_format,
+                posts: task.posts || [],
                 deadline: task.deadline,
                 is_active: true
             })
@@ -392,7 +456,6 @@ async function loadUsers() {
         if (response.ok) {
             currentUsers = await response.json();
         } else {
-            // Демо-данные
             currentUsers = [
                 {id:1, vk_id:123456, name:"Иванов Иван Иванович", institute:"ИКНК", group_num:"3530901/80101", is_active:true, completed_tasks:3},
                 {id:2, vk_id:234567, name:"Петрова Анна Сергеевна", institute:"ИПМЭИТ", group_num:"3734303/30101", is_active:true, completed_tasks:5},
@@ -411,19 +474,19 @@ function displayUsers() {
     if (!tbody) return;
 
     if (currentUsers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">Нет пользователей</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">Нет пользователей</td> </tr>';
         return;
     }
 
     tbody.innerHTML = currentUsers.map(user => `
-        <tr>
-            <td>${user.vk_id}</td>
-            <td>${user.name}</td>
-            <td>${user.institute || '-'}</td>
-            <td>${user.group_num || '-'}</td>
-            <td><span class="status ${user.is_active ? 'active' : 'inactive'}">${user.is_active ? 'Активен' : 'Неактивен'}</span></td>
-            <td>${user.completed_tasks || 0}</td>
-        </tr>
+         <tr>
+            <td style="padding: 12px;">${user.vk_id}</td>
+            <td style="padding: 12px;">${user.name}</td>
+            <td style="padding: 12px;">${user.institute || '-'}</td>
+            <td style="padding: 12px;">${user.group_num || '-'}</td>
+            <td style="padding: 12px;"><span class="status ${user.is_active ? 'active' : 'inactive'}">${user.is_active ? 'Активен' : 'Неактивен'}</span></td>
+            <td style="padding: 12px;">${user.completed_tasks || 0}</td>
+         </tr>
     `).join('');
 }
 
@@ -459,14 +522,14 @@ function searchUsers() {
     }
     
     tbody.innerHTML = filtered.map(user => `
-        <tr>
-            <td>${user.vk_id}</td>
-            <td>${user.name}</td>
-            <td>${user.institute || '-'}</td>
-            <td>${user.group_num || '-'}</td>
-            <td><span class="status ${user.is_active ? 'active' : 'inactive'}">${user.is_active ? 'Активен' : 'Неактивен'}</span></td>
-            <td>${user.completed_tasks || 0}</td>
-        </tr>
+         <tr>
+            <td style="padding: 12px;">${user.vk_id}</td>
+            <td style="padding: 12px;">${user.name}</td>
+            <td style="padding: 12px;">${user.institute || '-'}</td>
+            <td style="padding: 12px;">${user.group_num || '-'}</td>
+            <td style="padding: 12px;"><span class="status ${user.is_active ? 'active' : 'inactive'}">${user.is_active ? 'Активен' : 'Неактивен'}</span></td>
+            <td style="padding: 12px;">${user.completed_tasks || 0}</td>
+         </tr>
     `).join('');
 }
 

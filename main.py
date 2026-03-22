@@ -10,6 +10,7 @@ import os
 import logging
 from typing import List, Dict
 from models import BotUser, UserTask
+import json
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -118,6 +119,7 @@ async def create_task(
     db: Session = Depends(get_db),
     current_user: User = Depends(auth.get_current_user),
 ):
+    posts_json = json.dumps(task_data.posts) if task_data.posts else None
 
     try:
         # Валидация данных
@@ -146,6 +148,7 @@ async def create_task(
             task_type=task_data.task_type,
             auto_type=task_data.auto_type,
             file_format=task_data.file_format,
+            posts=posts_json,
             deadline=task_data.deadline,
             created_by=current_user.id,
             is_active=True,
@@ -155,11 +158,27 @@ async def create_task(
         db.commit()
         db.refresh(task)
 
-        logger.info(
-            f"✅ Задание '{task.title}' создано пользователем {current_user.username}"
-        )
+        posts_list = []
+        if task.posts:
+            try:
+                posts_list = json.loads(task.posts)
+            except:
+                posts_list = []
 
-        return task
+        return {
+            "id": task.id,
+            "title": task.title,
+            "description": task.description,
+            "task_type": task.task_type,
+            "auto_type": task.auto_type,
+            "file_format": task.file_format,
+            "posts": posts_list,
+            "deadline": task.deadline,
+            "created_at": task.created_at,
+            "created_by": task.created_by,
+            "is_active": task.is_active,
+            "creator_name": current_user.full_name,
+        }
 
     except HTTPException:
         raise
@@ -190,12 +209,18 @@ async def get_tasks(
         # Получаем общее количество
         total = query.count()
 
-        # Получаем задания с пагинацией
         tasks = query.order_by(desc(Task.created_at)).offset(skip).limit(limit).all()
 
-        # Добавляем имя создателя
         task_responses = []
         for task in tasks:
+            posts_list = []
+            if task.posts:
+                try:
+                    posts_list = json.loads(task.posts)
+                except (json.JSONDecodeError, TypeError) as e:
+                    logger.warning(f"Ошибка парсинга posts для задания {task.id}: {e}")
+                    posts_list = []
+
             task_dict = {
                 "id": task.id,
                 "title": task.title,
@@ -203,6 +228,7 @@ async def get_tasks(
                 "task_type": task.task_type,
                 "auto_type": task.auto_type,
                 "file_format": task.file_format,
+                "posts": posts_list,
                 "deadline": task.deadline,
                 "created_at": task.created_at,
                 "created_by": task.created_by,
@@ -230,7 +256,29 @@ async def get_task(
     if not task:
         raise HTTPException(status_code=404, detail="Задание не найдено")
 
-    return task
+    # ✅ Парсим posts из JSON
+    posts_list = []
+    if task.posts:
+        try:
+            posts_list = json.loads(task.posts)
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.warning(f"Ошибка парсинга posts для задания {task.id}: {e}")
+            posts_list = []
+
+    return {
+        "id": task.id,
+        "title": task.title,
+        "description": task.description,
+        "task_type": task.task_type,
+        "auto_type": task.auto_type,
+        "file_format": task.file_format,
+        "posts": posts_list,
+        "deadline": task.deadline,
+        "created_at": task.created_at,
+        "created_by": task.created_by,
+        "is_active": task.is_active,
+        "creator_name": task.creator.full_name if task.creator else None,
+    }
 
 
 @app.put("/api/tasks/{task_id}", response_model=schemas.TaskResponse)
@@ -257,16 +305,38 @@ async def update_task(
     task.auto_type = task_data.auto_type
     task.file_format = task_data.file_format
     task.deadline = task_data.deadline
-    task.is_active = task_data.is_active 
+    task.is_active = task_data.is_active
+
+    task.posts = json.dumps(task_data.posts) if task_data.posts else None
 
     db.commit()
     db.refresh(task)
+
+    posts_list = []
+    if task.posts:
+        try:
+            posts_list = json.loads(task.posts)
+        except:
+            posts_list = []
 
     logger.info(
         f"✅ Задание '{task.title}' обновлено пользователем {current_user.username}"
     )
 
-    return task
+    return {
+        "id": task.id,
+        "title": task.title,
+        "description": task.description,
+        "task_type": task.task_type,
+        "auto_type": task.auto_type,
+        "file_format": task.file_format,
+        "posts": posts_list,
+        "deadline": task.deadline,
+        "created_at": task.created_at,
+        "created_by": task.created_by,
+        "is_active": task.is_active,
+        "creator_name": task.creator.full_name if task.creator else None,
+    }
 
 
 @app.delete("/api/tasks/{task_id}")

@@ -38,6 +38,7 @@ class Task(Base):
     task_type = Column(String, nullable=False)
     auto_type = Column(String, nullable=True)
     file_format = Column(String, nullable=True)
+    posts = Column(Text, nullable=True)
     deadline = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.now)
     created_by = Column(Integer, ForeignKey("users.id"))

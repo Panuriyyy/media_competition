@@ -131,6 +131,17 @@
                     <option value="DOC, DOCS, PDF, TXT">DOC, DOCS, PDF, TXT</option>
                 </select>
             </div>
+
+            <div id="edit-posts-block" class="form-group" style="display: none;">
+                <label>Посты (ссылки):</label>
+                <div id="edit-posts-container">
+                    <div class="post-row">
+                        <input type="url" class="edit-post-input" placeholder="https://vk.com/wall...">
+                        <button type="button" class="add-post-btn" onclick="addEditPostRow()">+</button>
+                    </div>
+                </div>
+                <small class="hint">Введите ссылки на посты для проверки</small>
+            </div>
             
             <div class="form-group">
                 <label>Дедлайн:</label>

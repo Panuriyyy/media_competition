@@ -42,6 +42,7 @@ class TaskBase(BaseModel):
     task_type: str  # 'auto' или 'manual'
     auto_type: Optional[str] = None  # 'likes' или 'comments'
     file_format: Optional[str] = None
+    posts: Optional[List[str]] = None
     deadline: datetime
     is_active: Optional[bool] = True
 
