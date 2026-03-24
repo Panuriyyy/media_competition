@@ -415,6 +415,38 @@ def get_user_task_status(user_vk_id: int, task_id: int) -> Optional[str]:
             conn.close()
 
 
+def save_user_task_score(user_vk_id: int, task_id: int, score: int) -> bool:
+    """Сохраняет количество баллов за выполненное задание"""
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+
+        # Добавляем колонку score в user_tasks, если её нет
+        c.execute("PRAGMA table_info(user_tasks)")
+        columns = [col[1] for col in c.fetchall()]
+        if "score" not in columns:
+            c.execute("ALTER TABLE user_tasks ADD COLUMN score INTEGER DEFAULT 0")
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        c.execute(
+            """UPDATE user_tasks 
+               SET score = ?, completed_date = ?
+               WHERE user_vk_id = ? AND task_id = ?""",
+            (score, now, user_vk_id, task_id),
+        )
+
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка сохранения баллов: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
 def save_manual_submission(
     user_vk_id: int, task_id: int, submission_url: str, submission_type: str
 ) -> bool:

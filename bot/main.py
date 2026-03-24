@@ -7,6 +7,7 @@ from vkbottle import (
 )
 from config import (
     VK_TOKEN,
+    USER_TOKEN,
     GROUP_ID,
     GROUP_SCREEN_NAME,
     API_URL,
@@ -77,26 +78,50 @@ def extract_post_id_from_url(url: str) -> Optional[int]:
     return None
 
 
+# ==================== ОДНА ВЕРСИЯ ФУНКЦИЙ ПРОВЕРКИ ====================
+
+
 async def check_user_likes(user_id: int, post_ids: List[int], owner_id: int) -> bool:
-    """Проверяет, лайкнул ли пользователь указанные посты"""
+    """Проверяет, лайкнул ли пользователь указанные посты (через likes.getList)"""
     try:
         for post_id in post_ids:
+            logger.info(
+                f"Проверка лайка: пользователь {user_id}, пост {owner_id}_{post_id}"
+            )
+
+            # Получаем список лайкнувших пост
             response = requests.get(
-                "https://api.vk.com/method/likes.isLiked",
+                "https://api.vk.com/method/likes.getList",
                 params={
-                    "user_id": user_id,
                     "type": "post",
                     "owner_id": owner_id,
                     "item_id": post_id,
-                    "access_token": bot.token,
-                    "v": "5.131",
+                    "count": 1000,
+                    "access_token": VK_TOKEN,
+                    "v": "5.199",
                 },
             )
+
             if response.ok:
-                if response.json().get("response", {}).get("liked") != 1:
+                data = response.json()
+                logger.info(f"Ответ VK API: {data}")
+
+                if "error" in data:
+                    logger.error(f"Ошибка VK API: {data['error']}")
                     return False
+
+                items = data.get("response", {}).get("items", [])
+
+                # Проверяем, есть ли user_id в списке лайкнувших
+                if user_id not in items:
+                    logger.info(f"Пользователь {user_id} не лайкнул пост {post_id}")
+                    return False
+                else:
+                    logger.info(f"Пользователь {user_id} лайкнул пост {post_id}")
             else:
+                logger.error(f"HTTP ошибка: {response.status_code}")
                 return False
+
         return True
     except Exception as e:
         logger.error(f"Ошибка проверки лайков: {e}")
@@ -107,20 +132,34 @@ async def check_user_comments(user_id: int, post_ids: List[int], owner_id: int) 
     """Проверяет, оставил ли пользователь комментарии под указанными постами"""
     try:
         for post_id in post_ids:
+            logger.info(
+                f"Проверка комментариев: пользователь {user_id}, пост {owner_id}_{post_id}"
+            )
+
             response = requests.get(
                 "https://api.vk.com/method/wall.getComments",
                 params={
                     "owner_id": owner_id,
                     "post_id": post_id,
                     "count": 100,
-                    "access_token": bot.token,
-                    "v": "5.131",
+                    "access_token": VK_TOKEN,
+                    "v": "5.199",
                 },
             )
+
             if response.ok:
-                comments = response.json().get("response", {}).get("items", [])
-                if not any(c.get("from_id") == user_id for c in comments):
+                data = response.json()
+                if "error" in data:
+                    logger.error(f"Ошибка VK API: {data['error']}")
                     return False
+                comments = data.get("response", {}).get("items", [])
+                if not any(c.get("from_id") == user_id for c in comments):
+                    logger.info(
+                        f"Пользователь {user_id} не комментировал пост {post_id}"
+                    )
+                    return False
+                else:
+                    logger.info(f"Пользователь {user_id} комментировал пост {post_id}")
             else:
                 return False
         return True
@@ -132,10 +171,15 @@ async def check_user_comments(user_id: int, post_ids: List[int], owner_id: int) 
 def validate_file_extension(filename: str, allowed_formats: str) -> bool:
     """Проверяет расширение файла на соответствие разрешенным форматам"""
     if not filename or not allowed_formats:
-        return False
+        return True
 
     ext = os.path.splitext(filename)[1].lower().lstrip(".")
-    allowed = [fmt.strip().lower() for fmt in allowed_formats.replace(",", " ").split()]
+    allowed = []
+    for fmt in allowed_formats.replace(",", " ").split():
+        fmt = fmt.strip().lower()
+        if fmt.startswith("."):
+            fmt = fmt[1:]
+        allowed.append(fmt)
     return ext in allowed
 
 
@@ -147,7 +191,6 @@ async def start_handler(message: Message):
     """Начало диалога"""
     logger.info(f"Пользователь {message.from_id}: начало диалога")
 
-    # Проверяем, зарегистрирован ли пользователь
     user_info = get_user_info(message.from_id)
     if user_info:
         await message.answer("С возвращением!", keyboard=EMPTY_KEYBOARD)
@@ -196,27 +239,23 @@ async def confirm_handler(message: Message):
     """Подтверждение регистрации"""
     logger.info(f"Пользователь {message.from_id}: подтверждение регистрации")
 
-    # Получаем данные из контекста
     name = ctx.get("name")
     institute = ctx.get("institute")
 
     if not name or not institute:
         await message.answer(
-            "❌ Данные не найдены. Начните заново: Начать", keyboard=EMPTY_KEYBOARD
+            "Данные не найдены. Начните заново: Начать", keyboard=EMPTY_KEYBOARD
         )
         return
 
-    # Завершаем состояние
     await bot.state_dispenser.delete(message.peer_id)
 
-    # Сохраняем в БД
     save_user(message.from_id, name, institute, "")
 
-    # Очищаем контекст
     ctx.delete("name")
     ctx.delete("institute")
 
-    await message.answer("✅ Регистрация успешно завершена!", keyboard=EMPTY_KEYBOARD)
+    await message.answer("Регистрация успешно завершена!", keyboard=EMPTY_KEYBOARD)
 
     await show_available_tasks(message)
 
@@ -226,11 +265,9 @@ async def restart_handler(message: Message):
     """Сброс регистрации"""
     logger.info(f"Пользователь {message.from_id}: сброс регистрации")
 
-    # Очищаем контекст
     ctx.delete("name")
     ctx.delete("institute")
 
-    # Устанавливаем состояние на начало
     await bot.state_dispenser.set(message.peer_id, RegData.NAME)
     await message.answer("Введите ваше ФИО:", keyboard=EMPTY_KEYBOARD)
 
@@ -315,7 +352,7 @@ async def offer_task_handler(message: Message):
     keyboard.add(Text("Позже"), color=KeyboardButtonColor.SECONDARY)
 
     await message.answer(
-        f"**{task['title']}**\n\n{task['description']}\n\nПриступить?",
+        f"{task['title']}\n\n{task['description']}\n\nПриступить?",
         keyboard=keyboard,
     )
 
@@ -355,7 +392,6 @@ async def name_handler(message: Message):
 @bot.on.message(state=RegData.INSTITUTE)
 async def institute_handler(message: Message):
     """Обработка института"""
-    # Пропускаем команды, которые уже обработаны выше
     if message.text in [
         "ПОДТВЕРДИТЬ РЕГИСТРАЦИЮ",
         "Начать заново",
@@ -371,17 +407,14 @@ async def institute_handler(message: Message):
     ctx.set("institute", message.text)
     logger.info(f"Пользователь {message.from_id}: ввел институт {message.text}")
 
-    # Получаем данные
     name = ctx.get("name")
     institute = ctx.get("institute")
 
-    # Показываем данные для подтверждения
     await message.answer(
-        f"Проверьте данные:\n\n" f"ФИО: {name}\n" f"Институт: {institute}",
+        f"Проверьте данные:\n\nФИО: {name}\nИнститут: {institute}",
         keyboard=EMPTY_KEYBOARD,
     )
 
-    # Создаем клавиатуру для подтверждения
     keyboard = Keyboard()
     keyboard.add(Text("ПОДТВЕРДИТЬ РЕГИСТРАЦИЮ"), color=KeyboardButtonColor.POSITIVE)
     keyboard.row()
@@ -390,12 +423,132 @@ async def institute_handler(message: Message):
     await message.answer("Всё правильно?", keyboard=keyboard)
 
 
-# ==================== 4. ВСЕ ОСТАЛЬНЫЕ СООБЩЕНИЯ ====================
+# ==================== 4. ОБРАБОТЧИК ОТПРАВКИ ФАЙЛОВ (ВАЖНО: ДОЛЖЕН БЫТЬ ПЕРЕД ОБЩИМ ОБРАБОТЧИКОМ) ====================
+
+
+@bot.on.message()
+async def handle_submission(message: Message):
+    """Обработка отправленных файлов с валидацией формата"""
+    user_id = message.from_id
+    task = ctx.get(f"awaiting_submission_{user_id}")
+
+    if not task:
+        return
+
+    task_id = task["id"]
+    file_format = task.get("file_format", "")
+
+    has_attachment = bool(message.attachments)
+    has_link = any(
+        x in message.text.lower() for x in ["http://", "https://", "vk.com/"]
+    )
+
+    if not has_attachment and not has_link:
+        await message.answer(
+            f"Пришлите ссылку или файл.\nТребуемый формат: {file_format}",
+            keyboard=EMPTY_KEYBOARD,
+        )
+        return
+
+    submission_type = "unknown"
+    submission_url = ""
+    filename = ""
+    valid_format = False
+    error_message = ""
+
+    if message.attachments:
+        att = message.attachments[0]
+
+        if att.photo:
+            submission_type = "photo"
+            submission_url = att.photo.sizes[-1].url
+            filename = f"photo_{att.photo.id}.jpg"
+            if not file_format:
+                valid_format = True
+            else:
+                allowed_formats = [
+                    f.strip().lower() for f in file_format.replace(",", " ").split()
+                ]
+                valid_format = any(
+                    f in ["jpg", "jpeg", "png", "gif", "bmp"] for f in allowed_formats
+                )
+                if not valid_format:
+                    error_message = (
+                        f"Требуется формат: {file_format}, а вы отправили изображение"
+                    )
+
+        elif att.doc:
+            submission_type = "doc"
+            submission_url = att.doc.url
+            filename = att.doc.title
+            if not file_format:
+                valid_format = True
+            else:
+                valid_format = validate_file_extension(filename, file_format)
+                if not valid_format:
+                    ext = os.path.splitext(filename)[1].lower().lstrip(".")
+                    error_message = f"Требуется формат: {file_format}, а вы отправили файл .{ext}"
+
+        elif att.video:
+            submission_type = "video"
+            submission_url = f"https://vk.com/video{att.video.owner_id}_{att.video.id}"
+            filename = f"video_{att.video.id}.mp4"
+            if not file_format:
+                valid_format = True
+            else:
+                allowed_formats = [
+                    f.strip().lower() for f in file_format.replace(",", " ").split()
+                ]
+                valid_format = any(
+                    f in ["mp4", "mov", "avi", "mkv"] for f in allowed_formats
+                )
+                if not valid_format:
+                    error_message = f"Требуется формат: {file_format}, а вы отправили видео"
+
+        elif att.audio:
+            submission_type = "audio"
+            submission_url = f"https://vk.com/audio{att.audio.owner_id}_{att.audio.id}"
+            filename = f"audio_{att.audio.id}.mp3"
+            if not file_format:
+                valid_format = True
+            else:
+                allowed_formats = [
+                    f.strip().lower() for f in file_format.replace(",", " ").split()
+                ]
+                valid_format = any(
+                    f in ["mp3", "wav", "ogg", "m4a"] for f in allowed_formats
+                )
+                if not valid_format:
+                    error_message = f"Требуется формат: {file_format}, а вы отправили аудио"
+    else:
+        submission_type = "link"
+        submission_url = message.text
+        valid_format = True
+
+    if not valid_format:
+        await message.answer(
+            f"Неверный формат.\n{error_message}",
+            keyboard=EMPTY_KEYBOARD,
+        )
+        return
+
+    save_manual_submission(user_id, task_id, submission_url, submission_type)
+
+    await message.answer(
+        "Работа отправлена на проверку!",
+        keyboard=EMPTY_KEYBOARD,
+    )
+
+    ctx.delete(f"awaiting_submission_{user_id}")
+    await show_available_tasks(message)
+
+
+# ==================== 5. ВСЕ ОСТАЛЬНЫЕ СООБЩЕНИЯ (ДОЛЖЕН БЫТЬ ПОСЛЕДНИМ) ====================
 
 
 @bot.on.private_message()
 async def other_messages(message: Message):
-    """Все остальные сообщения"""
+    """Все остальные сообщения (только если не попали в другие обработчики)"""
     text = to_lower_text(message.text)
 
     ignored = [
@@ -426,8 +579,7 @@ async def show_available_tasks(message: Message):
 
     if not tasks:
         await message.answer(
-            "На данный момент нет активных заданий. "
-            "Мы сообщим, как только появятся новые!",
+            "На данный момент нет активных заданий. Мы сообщим, как только появятся новые!",
             keyboard=EMPTY_KEYBOARD,
         )
         return
@@ -436,7 +588,7 @@ async def show_available_tasks(message: Message):
 
     for task in tasks:
         status = get_user_task_status(message.from_id, task["id"])
-        status_text = {"completed": "✅ выполнено", "pending": "⏳ на проверке"}.get(
+        status_text = {"completed": "выполнено", "pending": "на проверке"}.get(
             status, ""
         )
 
@@ -447,7 +599,7 @@ async def show_available_tasks(message: Message):
         )
 
         await message.answer(
-            f"**{task['title']}** {status_text}\n\n"
+            f"{task['title']} {status_text}\n\n"
             f"{task['description']}\n\n"
             f"Дедлайн: {task['deadline'][:16].replace('T', ' ')}\n"
             f"Тип: {'Автоматическая' if task['task_type'] == 'auto' else 'Ручная'}",
@@ -460,8 +612,10 @@ async def handle_auto_task(message: Message, task: Dict):
     user_id = message.from_id
     task_id = task["id"]
 
-    # Получаем ссылки на посты из задания (если есть)
+    logger.info(f"Начало проверки задания {task_id} для пользователя {user_id}")
+
     post_links = task.get("posts", [])
+    logger.info(f"Ссылки на посты: {post_links}")
 
     if not post_links:
         await message.answer(
@@ -469,20 +623,22 @@ async def handle_auto_task(message: Message, task: Dict):
         )
         return
 
-    # Извлекаем ID постов из ссылок
     post_ids = []
     owner_id = None
 
     for link in post_links:
         post_id = extract_post_id_from_url(link)
+        logger.info(f"Ссылка: {link} -> post_id: {post_id}")
+
         if post_id:
             post_ids.append(post_id)
-            if not owner_id and "-wall" in link:
-                owner_part = link.split("-wall")[0].split("/")[-1]
+            if not owner_id and "wall-" in link:
                 try:
-                    owner_id = -int(owner_part) if owner_part.isdigit() else None
-                except:
-                    owner_id = None
+                    owner_part = link.split("wall-")[1].split("_")[0]
+                    owner_id = -int(owner_part)
+                    logger.info(f"Определен owner_id: {owner_id}")
+                except Exception as e:
+                    logger.error(f"Ошибка извлечения owner_id: {e}")
 
     if not post_ids:
         await message.answer(
@@ -492,40 +648,43 @@ async def handle_auto_task(message: Message, task: Dict):
 
     if not owner_id:
         owner_id = -GROUP_ID
+        logger.info(f"Используем owner_id по умолчанию: {owner_id}")
 
-    # Проверяем выполнение
+    logger.info(f"Проверяем посты: {post_ids}, owner_id: {owner_id}")
+
     if task.get("auto_type") == "likes":
         completed = await check_user_likes(user_id, post_ids, owner_id)
-        check_text = f"лайкнули все {len(post_ids)} постов"
         action_text = "лайк"
     else:
         completed = await check_user_comments(user_id, post_ids, owner_id)
-        check_text = f"оставили комментарии под всеми {len(post_ids)} постами"
         action_text = "комментарий"
+
+    logger.info(f"Результат проверки: completed={completed}")
 
     if completed:
         save_user_task_completion(user_id, task_id, "completed")
         await message.answer(
-            f"✅ Задание выполнено! Вы {check_text}.", keyboard=EMPTY_KEYBOARD
+            f"Задание выполнено! Вы поставили {action_text} на все посты.",
+            keyboard=EMPTY_KEYBOARD,
         )
         await show_available_tasks(message)
     else:
-        links_text = "\n".join([f"• {link}" for link in post_links])
+        links_text = "\n".join([f"{link}" for link in post_links])
 
         keyboard = Keyboard(inline=True)
         keyboard.add(
             Text(
-                "🔄 Проверить ещё раз",
+                "Проверить ещё раз",
                 payload={"task_id": task_id, "action": "retry_auto"},
             ),
             color=KeyboardButtonColor.PRIMARY,
         )
 
         await message.answer(
-            f"❌ Задание не выполнено.\n\n"
+            f"Задание не выполнено.\n\n"
             f"Вам нужно поставить {action_text} под следующими постами:\n\n"
             f"{links_text}\n\n"
-            f"После этого нажмите кнопку ниже.",
+            f"После этого нажмите кнопку ниже для проверки.",
             keyboard=keyboard,
         )
 
@@ -542,97 +701,14 @@ async def handle_manual_task(message: Message, task: Dict):
     format_desc = format_descriptions.get(file_format, file_format)
 
     await message.answer(
-        f"**{task['title']}**\n\n"
+        f"{task['title']}\n\n"
         f"{task['description']}\n\n"
-        f"📎 Требуемый формат: {format_desc}\n\n"
+        f"Требуемый формат: {format_desc}\n\n"
         f"Пришлите ссылку или прикрепите файл:",
         keyboard=EMPTY_KEYBOARD,
     )
 
     ctx.set(f"awaiting_submission_{message.from_id}", task)
-
-
-@bot.on.message()
-async def handle_submission(message: Message):
-    """Обработка отправленных файлов"""
-    user_id = message.from_id
-    task = ctx.get(f"awaiting_submission_{user_id}")
-
-    if not task:
-        return
-
-    task_id = task["id"]
-    file_format = task.get("file_format", "")
-
-    has_attachment = bool(message.attachments)
-    has_link = any(
-        x in message.text.lower() for x in ["http://", "https://", "vk.com/"]
-    )
-
-    if has_attachment or has_link:
-        submission_type = "unknown"
-        submission_url = ""
-        filename = ""
-        valid_format = False
-
-        if message.attachments:
-            att = message.attachments[0]
-            if att.photo:
-                submission_type = "photo"
-                submission_url = att.photo.sizes[-1].url
-                filename = f"photo_{att.photo.id}.jpg"
-                valid_format = (
-                    not file_format
-                    or "jpg" in file_format.lower()
-                    or "png" in file_format.lower()
-                )
-            elif att.doc:
-                submission_type = "doc"
-                submission_url = att.doc.url
-                filename = att.doc.title
-                valid_format = (
-                    validate_file_extension(filename, file_format)
-                    if file_format
-                    else True
-                )
-            elif att.video:
-                submission_type = "video"
-                submission_url = (
-                    f"https://vk.com/video{att.video.owner_id}_{att.video.id}"
-                )
-                valid_format = "mp4" in file_format.lower() if file_format else True
-            elif att.audio:
-                submission_type = "audio"
-                submission_url = (
-                    f"https://vk.com/audio{att.audio.owner_id}_{att.audio.id}"
-                )
-                valid_format = "mp3" in file_format.lower() if file_format else True
-        else:
-            submission_type = "link"
-            submission_url = message.text
-            valid_format = True
-
-        if not valid_format:
-            await message.answer(
-                f"❌ Неверный формат.\nТребуется: {file_format}",
-                keyboard=EMPTY_KEYBOARD,
-            )
-            return
-
-        save_manual_submission(user_id, task_id, submission_url, submission_type)
-
-        await message.answer(
-            "✅ Работа отправлена на проверку!",
-            keyboard=EMPTY_KEYBOARD,
-        )
-
-        ctx.delete(f"awaiting_submission_{user_id}")
-        await show_available_tasks(message)
-    else:
-        await message.answer(
-            f"❌ Пришлите ссылку или файл.\nТребуемый формат: {file_format}",
-            keyboard=EMPTY_KEYBOARD,
-        )
 
 
 # ==================== ФОНОВАЯ ЗАДАЧА ====================
@@ -672,7 +748,7 @@ async def check_new_tasks_background():
 
 
 if __name__ == "__main__":
-    logger.info("🚀 Запуск бота...")
+    logger.info("Запуск бота...")
 
     import threading
 
