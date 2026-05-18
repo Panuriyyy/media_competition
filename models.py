@@ -6,107 +6,63 @@ from sqlalchemy import (
     ForeignKey,
     Boolean,
     Text,
-    UniqueConstraint,
+    Float,
 )
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from database import Base
 from datetime import datetime
-
-Base = declarative_base()
 
 
 class User(Base):
     __tablename__ = "users"
-
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     full_name = Column(String, nullable=False)
-    role = Column(String, default="admin")
-    created_at = Column(DateTime, default=datetime.now)
+    email = Column(String, unique=True, nullable=False)
+    role = Column(String, default="user")  # admin / user
+    institute = Column(String)  # Для дашборда по институтам
+    vk_id = Column(String, nullable=True)  # Для авторизации и проверки лайков
+    vk_link = Column(String, nullable=True)
+    tg_link = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Связь с заданиями
-    tasks = relationship("Task", back_populates="creator")
+    submissions = relationship("TaskSubmission", back_populates="user")
 
 
 class Task(Base):
     __tablename__ = "tasks"
-
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
-    description = Column(Text, nullable=False)
-    task_type = Column(String, nullable=False)
-    auto_type = Column(String, nullable=True)
-    file_format = Column(String, nullable=True)
-    posts = Column(Text, nullable=True)
+    description = Column(Text)
+    task_type = Column(String, nullable=False)  # auto / manual
+    auto_type = Column(String, nullable=True)  # likes / comments
+    points_at_stake = Column(Float, default=0)
     deadline = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
-    created_by = Column(Integer, ForeignKey("users.id"))
     is_active = Column(Boolean, default=True)
+    posts_urls = Column(Text, nullable=True)  # JSON-строка со ссылками на посты VK
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Связь с создателем
-    creator = relationship("User", back_populates="tasks")
 
-
-class BotUser(Base):
-    __tablename__ = "bot_users"
-
+class TaskSubmission(Base):
+    __tablename__ = "task_submissions"
     id = Column(Integer, primary_key=True, index=True)
-    vk_id = Column(Integer, unique=True, index=True, nullable=False)
-    name = Column(String, nullable=False)
-    institute = Column(String)
-    group_num = Column(String)
-    reg_date = Column(DateTime, default=datetime.now)
-    is_active = Column(Boolean, default=True)
+    task_id = Column(Integer, ForeignKey("tasks.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    submission_data = Column(Text)  # Ссылка или путь к загруженному файлу
+    status = Column(String, default="pending")  # pending, approved, rejected
+    score = Column(Float, default=0)
+    submitted_at = Column(DateTime, default=datetime.utcnow)
 
-    # Связь с отправленными уведомлениями
-    notifications = relationship("SentNotification", back_populates="user")
-    # Связь с выполненными заданиями
-    completed_tasks = relationship("UserTask", back_populates="user")
+    user = relationship("User", back_populates="submissions")
+    task = relationship("Task")
 
 
-class SentNotification(Base):
-    __tablename__ = "sent_notifications"
-
+class Notification(Base):
+    __tablename__ = "notifications"
     id = Column(Integer, primary_key=True, index=True)
-    user_vk_id = Column(Integer, ForeignKey("bot_users.vk_id"))
-    task_id = Column(Integer, nullable=False)
-    sent_date = Column(DateTime, default=datetime.now)
-
-    # Связь с пользователем
-    user = relationship("BotUser", back_populates="notifications")
-
-    __table_args__ = (
-        UniqueConstraint("user_vk_id", "task_id", name="unique_user_task_notification"),
-    )
-
-
-class UserTask(Base):
-    __tablename__ = "user_tasks"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_vk_id = Column(Integer, ForeignKey("bot_users.vk_id"), nullable=False)
-    task_id = Column(Integer, nullable=False)
-    status = Column(String, default="pending")  # 'pending', 'completed', 'failed'
-    completed_date = Column(DateTime, nullable=True)
-
-    user = relationship("BotUser", back_populates="completed_tasks")
-
-    __table_args__ = (
-        UniqueConstraint("user_vk_id", "task_id", name="unique_user_task_completion"),
-    )
-
-
-class ManualSubmission(Base):
-    __tablename__ = "manual_submissions"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_vk_id = Column(Integer, ForeignKey("bot_users.vk_id"), nullable=False)
-    task_id = Column(Integer, nullable=False)
-    submission_url = Column(String)
-    submission_type = Column(String)  # 'photo', 'doc', 'video', 'audio', 'link'
-    submission_date = Column(DateTime, default=datetime.now)
-    status = Column(String, default="pending")  # 'pending', 'approved', 'rejected'
-
-    # Связь с пользователем
-    user = relationship("BotUser")
+    user_id = Column(Integer, ForeignKey("users.id"))
+    title = Column(String)
+    message = Column(Text)
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)

@@ -33,6 +33,7 @@ body {
     background: url('../media/background.png') fixed center/cover;
     min-height: 100vh;
     padding: 20px;
+    color: #ffffff; /* Глобально белый текст */
 }
 
 /* Контейнер */
@@ -50,6 +51,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 20px;
     margin-bottom: 30px;
 }
 
@@ -59,6 +62,47 @@ body {
     font-weight: 700;
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#admin-name, #user-name {
+    color: white;
+    font-weight: 500;
+}
+
+/* Информация о пользователе и кнопка выхода */
+.user-info {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logout-btn {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Onest', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.logout-btn:hover {
+    background: #da190b;
+    transform: translateY(-2px);
+}
+
+/* Кнопка создания задания */
 .create-btn {
     background: white;
     color: #233F26;
@@ -66,7 +110,7 @@ body {
     border-radius: 5px;
     padding: 12px 24px;
     font-family: 'Onest', sans-serif;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 16px;
     cursor: pointer;
     transition: 0.3s;
@@ -123,44 +167,6 @@ body {
     border-radius: 3px 3px 0 0;
 }
 
-/* ===== ПОДВКЛАДКИ (АКТИВНЫЕ/АРХИВНЫЕ) ===== */
-.task-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 25px;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 5px;
-    border-radius: 8px;
-    max-width: 300px;
-}
-
-.task-tab {
-    flex: 1;
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    font-family: 'Onest', sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: 0.3s;
-    border-radius: 5px;
-    text-align: center;
-    letter-spacing: 0.5px;
-}
-
-.task-tab:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.task-tab.active {
-    background: white;
-    color: #233F26;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
 /* ===== ЗАДАНИЯ ===== */
 .tasks-grid {
     display: flex;
@@ -173,6 +179,7 @@ body {
     border-radius: 8px;
     padding: 20px;
     transition: 0.3s;
+    color: white;
 }
 
 .task-card:hover {
@@ -194,8 +201,8 @@ body {
     margin: 0;
 }
 
-.task-badge {
-    background: rgba(255, 255, 255, 0.2);
+.task-badge, .type-badge {
+    background: #2196F3;
     color: white;
     padding: 4px 12px;
     border-radius: 20px;
@@ -212,7 +219,7 @@ body {
 .task-meta {
     display: flex;
     gap: 20px;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.8);
     font-size: 14px;
     margin: 10px 0;
 }
@@ -232,81 +239,16 @@ body {
     font-size: 14px;
     cursor: pointer;
     transition: 0.3s;
-}
-
-.edit-btn {
-    background: #4CAF50;
-    color: white;
-}
-
-.delete-btn {
     background: #f44336;
-    color: white;
-}
-
-.restore-btn {
-    background: #2196F3;
     color: white;
 }
 
 .task-actions button:hover {
     opacity: 0.9;
     transform: translateY(-2px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* ===== БЛОК ПОЛЬЗОВАТЕЛЕЙ ===== */
-.block-title {
-    color: white;
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 20px;
-}
-
-/* Поиск */
-.search-box {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.search-box input {
-    flex: 1;
-    padding: 12px 15px;
-    border: none;
-    border-radius: 5px;
-    font-family: 'Onest', sans-serif;
-    font-size: 14px;
-}
-
-.search-btn, .reset-btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 5px;
-    font-family: 'Onest', sans-serif;
-    font-weight: 500;
-    font-size: 14px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.search-btn {
-    background: #4CAF50;
-    color: white;
-}
-
-.reset-btn {
-    background: #f44336;
-    color: white;
-}
-
-.search-btn:hover, .reset-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Статистика */
+/* ===== СТАТИСТИКА ===== */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -323,7 +265,7 @@ body {
 
 .stat-label {
     display: block;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.8);
     font-size: 14px;
     margin-bottom: 8px;
 }
@@ -335,66 +277,103 @@ body {
     font-weight: 700;
 }
 
-/* Таблица */
-.table-wrapper {
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+/* ===== ОБЩИЕ СТИЛИ ДЛЯ ТАБЛИЦ (Проверка работ, Рейтинг) ===== */
+.table-wrapper, .table-container {
     overflow-x: auto;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
+    margin-top: 15px;
 }
 
-.users-table {
+table {
     width: 100%;
     border-collapse: collapse;
     color: white;
     font-size: 14px;
 }
 
-.users-table th {
-    background: rgba(255, 255, 255, 0.1);
+th, td {
     padding: 15px;
     text-align: left;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.users-table td {
-    padding: 12px 15px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
-.users-table tr:hover {
+th {
+    background: rgba(0, 0, 0, 0.2);
+    font-weight: bold;
+    color: #4CAF50;
+    text-transform: uppercase;
+}
+
+tr:hover {
     background: rgba(255, 255, 255, 0.05);
 }
 
-.status {
-    display: inline-block;
-    padding: 4px 8px;
+.table-select, .table-input {
+    width: 100%;
+    padding: 8px;
     border-radius: 4px;
-    font-size: 12px;
+    border: none;
+    background: #ffffff;
+    color: #000000;
+    font-family: 'Onest', sans-serif;
     font-weight: 500;
 }
 
-.status.active {
+.save-small-btn {
     background: #4CAF50;
     color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
 }
 
-.status.inactive {
-    background: #f44336;
-    color: white;
+.save-small-btn:hover {
+    background: #45a049;
 }
 
-.loading-cell {
-    text-align: center;
-    padding: 30px !important;
-    color: rgba(255, 255, 255, 0.7);
+/* ===== КНОПКИ ЭКСПОРТА (TXT / CSV) ===== */
+.rating-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
-.task-card.empty,
-.task-card.error {
-    text-align: center;
-    color: rgba(255, 255, 255, 0.7);
+.download-btn {
+    background-color: #2196F3;
+    color: #ffffff !important;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Onest', sans-serif;
+    font-weight: 600;
+    margin-right: 10px;
+    margin-bottom: 15px;
 }
+
+.download-btn:hover { background-color: #1976D2; }
+.download-btn:active { transform: scale(0.98); }
+
+.download-btn.csv-btn { background-color: #28a745; }
+.download-btn.csv-btn:hover { background-color: #218838; }
 
 /* ===== МОДАЛЬНОЕ ОКНО ===== */
 .modal {
@@ -406,7 +385,8 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    overflow-y: auto;
+    justify-content: center;
+    align-items: center;
     animation: fadeIn 0.3s;
 }
 
@@ -417,36 +397,25 @@ body {
 
 .modal-content {
     background-color: #233F26;
-    margin: 40px auto;
     padding: 30px;
-    border-radius: 10px;
+    border-radius: 12px;
+    width: 100%;
     max-width: 600px;
-    width: 90%;
+    /* Резиновое окно с прокруткой */
+    height: auto !important;
+    max-height: 90vh;
+    overflow-y: auto;
     position: relative;
     color: white;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    animation: slideDown 0.3s;
-}
-
-@keyframes slideDown {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 20px;
 }
 
 .modal-header h2 {
@@ -465,34 +434,25 @@ body {
     line-height: 1;
 }
 
-.close-modal:hover {
-    color: white;
-    transform: scale(1.1);
-}
+.close-modal:hover { color: white; transform: scale(1.1); }
 
-/* Форма в модальном окне */
-#editForm {
+/* ===== ФОРМА В МОДАЛЬНОМ ОКНЕ ===== */
+#editTaskForm {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.form-group label {
+#editTaskForm label {
     color: white;
     font-weight: 500;
     font-size: 14px;
-    letter-spacing: 0.3px;
+    margin-bottom: -5px; /* Приближаем текст к полю ввода */
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
+#editTaskForm input,
+#editTaskForm textarea,
+#editTaskForm select {
     width: 100%;
     padding: 12px 15px;
     border: none;
@@ -500,68 +460,61 @@ body {
     font-family: 'Onest', sans-serif;
     font-size: 14px;
     background-color: white;
-    color: #233F26;
+    color: #333;
     transition: all 0.3s;
     box-sizing: border-box;
 }
 
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
+#editTaskForm input:focus,
+#editTaskForm textarea:focus,
+#editTaskForm select:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.5);
 }
 
-.form-group textarea {
+#editTaskForm textarea {
     resize: vertical;
     min-height: 100px;
 }
 
-/* Блоки с дополнительными настройками */
-#edit-auto-settings,
-#edit-format-block {
+/* Блоки с дополнительными настройками (Автопроверка, Ссылки) */
+#auto-options,
+#links-container,
+#points-container {
     background-color: rgba(0, 0, 0, 0.2);
     padding: 20px;
     border-radius: 8px;
-    margin: 5px 0;
+    margin-top: 5px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-#edit-auto-settings label,
-#edit-format-block label {
-    display: block;
+/* Динамические ссылки ВК */
+.link-input-group {
+    display: flex;
+    gap: 10px;
     margin-bottom: 10px;
-    color: rgba(255, 255, 255, 0.9);
 }
 
-#edit-auto-settings select,
-#edit-format-block select {
-    width: 100%;
-    padding: 12px 15px;
-    border: none;
-    border-radius: 5px;
-    font-family: 'Onest', sans-serif;
-    font-size: 14px;
-    background-color: white;
-    color: #233F26;
+.link-input-group input {
+    background: #ffffff !important;
+    color: #333 !important;
+    margin-bottom: 0 !important;
 }
 
 /* Кнопки в модальном окне */
-.modal-footer {
+.button-group {
     display: flex;
     gap: 15px;
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 2px solid rgba(255, 255, 255, 0.2);
+    margin-top: 15px;
 }
 
-.modal-footer button {
+.button-group button {
     flex: 1;
     padding: 14px;
     border: none;
     border-radius: 5px;
     font-family: 'Onest', sans-serif;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 16px;
     cursor: pointer;
     transition: all 0.3s;
@@ -575,7 +528,6 @@ body {
 .save-btn:hover {
     background-color: #45a049;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .cancel-btn {
@@ -586,91 +538,56 @@ body {
 .cancel-btn:hover {
     background-color: #da190b;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Адаптивность */
+/* ===== АДАПТИВНОСТЬ ===== */
 @media (max-width: 768px) {
-    body { padding: 10px; }
-    
-    .admin-container { padding: 20px; }
-    
-    .header {
-        flex-direction: column;
-        text-align: center;
-        gap: 15px;
-    }
-    
-    .header h1 { font-size: 24px; }
-    
-    .create-btn { width: 100%; }
-    
+    .header { flex-direction: column; gap: 15px; text-align: center; }
     .main-tabs { flex-wrap: wrap; }
-    
-    .main-tab {
-        flex: 1;
-        text-align: center;
-        padding: 10px;
-        font-size: 16px;
-    }
-    
-    .task-tabs { max-width: 100%; }
-    
-    .task-tab {
-        padding: 8px;
-        font-size: 13px;
-    }
-    
-    .task-header { flex-direction: column; align-items: flex-start; }
-    
-    .task-meta { flex-direction: column; gap: 5px; }
-    
-    .task-actions { flex-direction: column; }
-    
-    .task-actions button { width: 100%; }
-    
-    .search-box {
-        flex-direction: column;
-    }
-    
-    .search-box input,
-    .search-btn,
-    .reset-btn {
-        width: 100%;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
-    .users-table th,
-    .users-table td {
-        padding: 8px;
-        font-size: 13px;
-    }
-    
-    /* Адаптивность модального окна */
-    .modal-content {
-        margin: 20px;
-        padding: 20px;
-    }
-    
-    .modal-header h2 {
-        font-size: 20px;
-    }
-    
-    .modal-footer {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .modal-footer button {
-        width: 100%;
-    }
-    
-    #edit-auto-settings,
-    #edit-format-block {
-        padding: 15px;
-    }
+    .main-tab { flex: 1; text-align: center; font-size: 16px; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .rating-header { flex-direction: column; align-items: flex-start; }
+    .button-group { flex-direction: column; }
 }
+
+.table-select {
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: #2c2f33; /* Темный фон под твой дизайн */
+    color: white;
+    cursor: pointer;
+    outline: none;
+}
+.table-select:focus {
+    border-color: #4CAF50;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+.save-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    flex: 1;
+}
+.save-btn:hover { background-color: #45a049; }
+
+.cancel-btn {
+    background-color: transparent;
+    color: #ff4444;
+    padding: 10px 20px;
+    border: 1px solid #ff4444;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    flex: 1;
+}
+.cancel-btn:hover { background-color: rgba(255, 68, 68, 0.1); }

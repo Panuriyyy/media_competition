@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои задания | Медиаконкурс</title>
+    <link rel="stylesheet" href="css/user.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="user-container">
+        <div class="header">
+            <h1>МедиаКонкурс</h1>
+            <div class="header-right">
+                <div class="notifications-icon" id="notifications-icon">
+                    <i class="fa-regular fa-bell"></i>
+                    <span id="notif-badge" class="notif-badge" style="display: none;"></span>
+                </div>
+                <span class="user-name" id="user-name"></span>
+                <button onclick="logout()" class="logout-btn">Выйти</button>
+            </div>
+        </div>
+
+        <div id="notifications-panel" class="notifications-panel" style="display: none;">
+            <div class="notif-header">
+                <h3>Уведомления</h3>
+                <button id="mark-all-read" class="mark-read-btn">Все прочитаны</button>
+            </div>
+            <div id="notifications-list"></div>
+        </div>
+
+        <div class="main-tabs" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px;">
+            <button class="main-tab active" onclick="switchUserTab('active')">АКТИВНЫЕ ЗАДАНИЯ</button>
+            <button class="main-tab" onclick="switchUserTab('history')">ВЫПОЛНЕННЫЕ (ИСТОРИЯ)</button>
+        </div>
+
+        <div id="active-tasks-block" class="tab-block" style="display: block;">
+            <div id="tasks-list" class="tasks-grid"></div>
+        </div>
+
+        <div id="history-tasks-block" class="tab-block" style="display: none;">
+            <div class="table-container">
+                <table style="width: 100%; color: white; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left;">
+                            <th style="padding: 10px;">Задание</th>
+                            <th style="padding: 10px;">Статус</th>
+                            <th style="padding: 10px;">Баллы</th>
+                            <th style="padding: 10px;">Дата сдачи</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="taskModal" class="modal" style="display: none;">
+        <div class="modal-content" style="background: #233F26; color: white; border-radius: 10px; padding: 25px; max-width: 500px; margin: 10% auto;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                <h2 id="modal-task-title"></h2>
+                <span class="close" onclick="closeTaskModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
+            </div>
+            <div class="modal-body" style="margin-top: 15px;">
+                <p id="modal-task-desc" style="margin-bottom: 20px; color: rgba(255,255,255,0.8);"></p>
+                
+                <div id="modal-posts" class="posts-list" style="display: none; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin-bottom: 15px;"></div>
+                
+                <div id="modal-file-input" style="display: none; margin-bottom: 15px;">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Загрузить файл (картинка/документ):</label>
+                        <input type="file" id="submission-file" class="form-input" style="display: block; margin-top: 5px; width: 100%;">
+                    </div>
+                    <div class="form-group">
+                        <label>ИЛИ вставьте ссылку (на видео в облаке):</label>
+                        <input type="url" id="submission-url" class="form-input" placeholder="https://..." style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: none;">
+                    </div>
+                </div>
+
+                <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button onclick="closeTaskModal()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Отмена</button>
+                    <button onclick="submitTask()" style="background: #4CAF50; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">Отправить работу</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/user.js"></script>
+</body>
+</html>

@@ -22,63 +22,6 @@
     font-display: swap;
 }
 
-@font-face {
-    font-family: 'Onest';
-    src: url('../fonts/Onest-Light.ttf') format('truetype');
-    font-weight: 300;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Onest';
-    src: url('../fonts/Onest-Thin.ttf') format('truetype');
-    font-weight: 100;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Onest';
-    src: url('../fonts/Onest-Black.ttf') format('truetype');
-    font-weight: 900;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Onest';
-    src: url('../fonts/Onest-ExtraBold.ttf') format('truetype');
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Onest';
-    src: url('../fonts/Onest-ExtraLight.ttf') format('truetype');
-    font-weight: 200;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Onest';
-    src: url('../fonts/Onest-SemiBold.ttf') format('truetype');
-    font-weight: 600;
-    font-style: normal;
-    font-display: swap;
-}
-
-/* Подключаем вариативный шрифт (если нужна тонкая настройка) */
-@font-face {
-    font-family: 'Onest Variable';
-    src: url('../fonts/Onest-VariableFont_wght.ttf') format('truetype');
-    font-weight: 100 900;
-    font-style: normal;
-    font-display: swap;
-}
-
 body {
     margin: 0;
     padding: 0;
@@ -98,8 +41,9 @@ body {
     padding: 40px;
     border-radius: 10px;
     width: 100%;
-    max-width: 400px;
+    max-width: 450px;
     box-sizing: border-box;
+    margin: 20px;
 }
 
 .login-container h2 {
@@ -111,24 +55,47 @@ body {
 .login-container label {
     color: white;
     display: block;
+    margin-top: 15px;
     margin-bottom: 5px;
+    font-weight: 500;
 }
 
+/* Стили для всех полей ввода */
 .login-container input[type="text"],
-.login-container input[type="password"] {
+.login-container input[type="password"],
+.login-container input[type="email"],
+.login-container input[type="url"],
+.login-container select {
     width: 100%;
-    padding: 10px;
-    margin: 10px 0 20px 0;
+    padding: 12px;
+    margin: 5px 0 10px 0;
     border: none;
     border-radius: 5px;
     box-sizing: border-box;
     font-family: 'Onest', sans-serif;
+    font-size: 14px;
+    background-color: white;
+    color: #233F26;
+}
+
+.login-container select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.login-container input:focus,
+.login-container select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
 }
 
 .button-group {
     display: flex;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
 .button-group input[type="submit"],
@@ -141,6 +108,7 @@ body {
     color: #233F26;
     font-family: 'Onest', sans-serif;
     font-weight: bold;
+    font-size: 16px;
     cursor: pointer;
     transition: opacity 0.3s;
 }
@@ -150,22 +118,87 @@ body {
     opacity: 0.9;
 }
 
+/* Стили для вкладок */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Onest', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 5px 5px 0 0;
+}
+
+.tab-btn.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    position: relative;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: white;
+    border-radius: 3px 3px 0 0;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
 .message {
     margin-top: 20px;
     padding: 12px;
     border-radius: 5px;
     display: none;
     text-align: center;
+    font-size: 14px;
 }
 
 .message.success {
-    background-color: #d4edda;
-    color: #155724;
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #a5d6a7;
     display: block;
 }
 
 .message.error {
-    background-color: #f8d7da;
-    color: #721c24;
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #ffcdd2;
     display: block;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    .login-container {
+        padding: 25px;
+        margin: 15px;
+    }
+    
+    .tab-btn {
+        font-size: 16px;
+        padding: 8px 16px;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
 }

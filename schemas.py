@@ -1,19 +1,29 @@
-from pydantic import BaseModel
+import json
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import datetime
 from typing import Optional, List
 
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
+INSTITUTES_LIST = [
+    "ГИ",
+    "ИКНК",
+    "ИПМЭиТ",
+    "ИСИ",
+    "ИБСиБ",
+    "ИЭиТ",
+    "Физмех",
+    "ИЭ",
+    "ИММИТ",
+    "ИСПО",
+]
 
 
 class UserBase(BaseModel):
     username: str
     full_name: str
-
-
-class UserCreate(UserBase):
-    password: str
+    email: EmailStr
+    institute: str
+    vk_link: Optional[str] = None
+    tg_link: Optional[str] = None
 
 
 class UserLogin(BaseModel):
@@ -21,48 +31,71 @@ class UserLogin(BaseModel):
     password: str
 
 
-class UserResponse(UserBase):
+class UserCreate(BaseModel):
+    full_name: str = Field(..., min_length=2, max_length=100)
+    username: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+    institute: str
+    vk_link: str
+    tg_link: Optional[str] = None
+
+    @field_validator("institute")
+    @classmethod
+    def validate_institute(cls, v):
+        if v not in INSTITUTES_LIST:
+            raise ValueError("Выберите институт из предложенного списка")
+        return v
+
+
+class UserOut(UserBase):
     id: int
     role: str
-    created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class TokenResponse(BaseModel):
+class Token(BaseModel):
     access_token: str
     token_type: str
-    user: UserResponse
 
 
-class TaskBase(BaseModel):
-    title: str
-    description: str
-    task_type: str  # 'auto' или 'manual'
-    auto_type: Optional[str] = None  # 'likes' или 'comments'
-    file_format: Optional[str] = None
-    posts: Optional[List[str]] = None
+class TaskCreate(BaseModel):
+    title: str = Field(..., min_length=3)
+    description: str = Field(..., min_length=10)
+    task_type: str
+    auto_type: Optional[str] = None
+    points_at_stake: float = Field(..., ge=0)
     deadline: datetime
-    is_active: Optional[bool] = True
+    posts_urls: Optional[List[str]] = None
 
 
-class TaskCreate(TaskBase):
-    posts: Optional[List[str]] = None
-    pass
-
-
-class TaskResponse(TaskBase):
+class TaskOut(TaskCreate):
     id: int
-    created_at: datetime
-    created_by: int
     is_active: bool
-    creator_name: Optional[str] = None
+
+    @field_validator("posts_urls", mode="before")
+    @classmethod
+    def parse_posts_urls(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except:
+                return []
+        return v
+
+    class Config:
+        from_attributes = True
 
     class Config:
         from_attributes = True
 
 
-class TaskListResponse(BaseModel):
-    tasks: List[TaskResponse]
-    total: int
+class SubmissionCreate(BaseModel):
+    submission_url: Optional[str] = None
+
+
+class VKAuth(BaseModel):
+    access_token: str
+    user_id: int

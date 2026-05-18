@@ -1,0 +1,533 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Onest', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: url('../media/background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding: 20px;
+    color: #ffffff; /* Задаем базовый белый цвет для всего текста */
+}
+
+/* Основной контейнер */
+.user-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #233F26;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Шапка */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header h1 {
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-name {
+    color: white;
+    font-weight: 500;
+}
+
+.logout-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* ===== УВЕДОМЛЕНИЯ ===== */
+.notifications-icon {
+    position: relative;
+    cursor: pointer;
+    font-size: 24px;
+    color: white;
+}
+
+.notif-badge {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    width: 10px;
+    height: 10px;
+    background-color: #f44336;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.notifications-panel {
+    position: absolute;
+    top: 80px;
+    right: 30px;
+    width: 350px;
+    max-height: 450px;
+    background: #233F26;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.notif-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.notif-header h3 {
+    color: white;
+    margin: 0;
+    font-size: 16px;
+}
+
+.mark-read-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.3s;
+}
+
+.mark-read-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.notifications-list {
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.notification-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.notification-item.unread {
+    background: rgba(76, 175, 80, 0.2);
+}
+
+.notif-title {
+    font-weight: bold;
+    color: white;
+    margin-bottom: 5px;
+}
+
+.notif-message {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.notif-date {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+}
+
+/* ===== ВКЛАДКИ ===== */
+.main-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+}
+
+.main-tab {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    font-size: 16px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 5px;
+}
+
+.main-tab.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.tab-block {
+    display: none;
+}
+
+.tab-block.active {
+    display: block;
+}
+
+/* ===== ЗАГОЛОВКИ ===== */
+h2 {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* ===== ЗАДАНИЯ ===== */
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.tasks-header input {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    width: 250px;
+    font-size: 14px;
+}
+
+.tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.task-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    transition: 0.3s;
+    cursor: pointer;
+    color: #ffffff; /* Принудительно делаем текст белым */
+}
+
+.task-card:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.task-card h3 {
+    color: white;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.task-desc {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.task-meta {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+.task-meta span {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.task-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 3px 8px;
+    border-radius: 15px;
+    font-size: 11px;
+    margin-top: 10px;
+}
+
+/* ===== ТАБЛИЦЫ ===== */
+.table-wrapper {
+    overflow-x: auto;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+}
+
+.users-table th {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    text-align: left;
+    font-weight: 500;
+}
+
+.users-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 15px;
+    font-size: 12px;
+}
+
+.status-not_checked {
+    background: #FF9800;
+}
+
+.status-completed {
+    background: #4CAF50;
+}
+
+.status-revision {
+    background: #f44336;
+}
+
+.loading {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 40px;
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО ===== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #233F26;
+    max-width: 600px;
+    width: 90%;
+    border-radius: 15px;
+    animation: slideIn 0.3s;
+    color: #ffffff; /* Принудительно делаем текст белым */
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 22px;
+    color: white;
+}
+
+.close {
+    font-size: 28px;
+    cursor: pointer;
+    color: white;
+    transition: 0.3s;
+}
+
+.close:hover {
+    transform: scale(1.1);
+}
+
+.modal-body {
+    padding: 20px;
+    color: #ffffff;
+}
+
+.modal-body p {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.posts-list {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.posts-list h4 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.posts-list a {
+    color: #4CAF50;
+    display: block;
+    margin: 5px 0;
+    word-break: break-all;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-size: 14px;
+    background: #ffffff;
+    color: #333333;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: #45a049;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== АНИМАЦИЯ ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .user-container {
+        padding: 15px;
+    }
+    
+    .header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .tasks-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .main-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .main-tab {
+        flex: 1;
+        text-align: center;
+        padding: 8px;
+        font-size: 14px;
+    }
+    
+    .notifications-panel {
+        width: 90%;
+        right: 5%;
+        left: 5%;
+        top: 70px;
+    }
+    
+    .users-table th,
+    .users-table td {
+        padding: 8px;
+        font-size: 13px;
+    }
+}
+
+/* ПРИНУДИТЕЛЬНЫЙ БЕЛЫЙ ЦВЕТ ДЛЯ КАБИНЕТА СТУДЕНТА */
+body, .user-container, .task-card, .task-card h3, .task-card p, .task-desc,
+.modal-content, .modal-body, .modal-header h2, .notif-title, .notif-message,
+.table-wrapper, .users-table th, .users-table td, .modal-body p, label {
+    color: #ffffff !important;
+}
+
+/* Делаем вспомогательный текст (даты, мета) чуть тусклее, но белым */
+.task-meta, .task-meta span, .notif-date {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Чтобы поля ввода внутри модалок были читаемыми */
+input, select, textarea {
+    color: #000000 !important;
+}

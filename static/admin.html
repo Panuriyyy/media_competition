@@ -1,160 +1,180 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Управление конкурсом</title>
+    <title>Панель администратора | Медиаконкурс</title>
     <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="admin-container">
-        <!-- Шапка -->
-        <div class="header">
-            <h1>Управление конкурсом</h1>
-            <button onclick="location.href='index.html'" class="create-btn">Создать задание</button>
-        </div>
+        <header class="header">
+            <h1>Панель администратора</h1>
+            <div class="header-right">
+                <span id="admin-name">Загрузка...</span>
+                <button class="logout-btn" onclick="logout()">Выйти</button>
+            </div>
+        </header>
 
-        <!-- Вкладки Задания/Пользователи -->
         <div class="main-tabs">
-            <button class="main-tab active" onclick="showMainTab('tasks')">ЗАДАНИЯ</button>
-            <button class="main-tab" onclick="showMainTab('users')">ПОЛЬЗОВАТЕЛИ</button>
+            <button class="main-tab active" onclick="showMainTab('dashboard')">Дашборд</button>
+            <button class="main-tab" onclick="showMainTab('tasks')">Задания</button>
+            <button class="main-tab" onclick="showMainTab('submissions')">Проверка работ</button>
+            <button class="main-tab" onclick="showMainTab('rating')">Рейтинг</button>
         </div>
 
-        <!-- Блок с заданиями -->
-        <div id="tasks-block" class="tab-block" style="display: block;">
-            <!-- Подвкладки Активные/Архивные -->
-            <div class="task-tabs">
-                <button class="task-tab active" onclick="showTaskTab('active')">Активные</button>
-                <button class="task-tab" onclick="showTaskTab('archive')">Архивные</button>
-            </div>
-
-            <!-- Список активных заданий -->
-            <div id="active-tasks" class="tasks-container" style="display: block;">
-                <div id="active-list" class="tasks-grid"></div>
-            </div>
-
-            <!-- Список архивных заданий -->
-            <div id="archive-tasks" class="tasks-container" style="display: none;">
-                <div id="archive-list" class="tasks-grid"></div>
-            </div>
-        </div>
-
-        <!-- Блок с пользователями -->
-        <div id="users-block" class="tab-block" style="display: none;">
-            <h2 class="block-title">Зарегистрированные пользователи</h2>
-            
-            <!-- Поиск -->
-            <div class="search-box">
-                <input type="text" id="userSearch" placeholder="Поиск по имени, институту или группе...">
-                <button onclick="searchUsers()" class="search-btn">Найти</button>
-                <button onclick="resetSearch()" class="reset-btn">Сброс</button>
-            </div>
-
-            <!-- Статистика -->
+        <div id="dashboard-block" class="tab-block" style="display: block;">
+            <h2>Статистика участников</h2>
             <div class="stats-grid">
                 <div class="stat-item">
-                    <span class="stat-label">Всего:</span>
-                    <span class="stat-number" id="total-users">0</span>
+                    <span class="stat-label">Всего зарегистрировано</span>
+                    <span class="stat-number" id="dash-users">0</span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">Активных:</span>
-                    <span class="stat-number" id="active-users">0</span>
+            </div>
+            <div class="institutes-stats">
+                <h3>Активность по институтам</h3>
+                <div id="institutes-list">
+                    </div>
+            </div>
+        </div>
+
+        <div id="tasks-block" class="tab-block" style="display: none;">
+            <div class="tasks-header">
+                <div class="task-tabs-wrapper">
+                    <h2 style="margin: 0;">Список заданий</h2>
+                    <div class="task-tabs">
+                        <button class="task-tab active" id="tab-btn-active" onclick="switchTaskStatus('active')">Активные</button>
+                        <button class="task-tab" id="tab-btn-archived" onclick="switchTaskStatus('archived')">Архив</button>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">Заданий:</span>
-                    <span class="stat-number" id="total-completed">0</span>
+                <button class="create-btn" onclick="openCreateTaskModal()">+ Создать задание</button>
+            </div>
+            
+            <div id="active-tasks" class="tasks-grid"></div>
+            <div id="archived-tasks" class="tasks-grid" style="display: none;"></div>
+        </div>
+
+        <div id="submissions-block" class="tab-block" style="display: none;">
+            <div class="submissions-header">
+                <h2>Проверка присланных работ</h2>
+                <select id="status-filter" onchange="loadSubmissions()">
+                    <option value="all">Все статусы</option>
+                    <option value="pending">Ожидают проверки</option>
+                    <option value="approved">Принятые</option>
+                    <option value="rejected">Отклоненные</option>
+                </select>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Участник</th>
+                            <th>Задание</th>
+                            <th>Материал</th>
+                            <th>Статус</th>
+                            <th>Баллы (из макс.)</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="submissions-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="rating-block" class="tab-block" style="display: none;">
+            <div class="rating-header">
+                <h2>Рейтинг участников</h2>
+                <div class="export-actions">
+                    <button class="download-btn" onclick="downloadReport('txt')"><i class="fa-solid fa-file-lines"></i> Скачать TXT</button>
+                    <button class="download-btn csv-btn" onclick="downloadReport('csv')"><i class="fa-solid fa-file-excel"></i> Скачать CSV</button>
                 </div>
             </div>
 
-            <!-- Таблица пользователей -->
-            <div class="table-wrapper">
-                <table class="users-table">
+            <div class="table-container">
+                <table>
                     <thead>
                         <tr>
-                            <th>VK ID</th>
+                            <th>Место</th>
                             <th>ФИО</th>
                             <th>Институт</th>
-                            <th>Группа</th>
-                            <th>Статус</th>
-                            <th>Заданий</th>
+                            <th>Суммарный балл</th>
                         </tr>
                     </thead>
-                    <tbody id="users-table-body">
-                        <tr><td colspan="6" class="loading-cell">Загрузка...</td></tr>
-                    </tbody>
+                    <tbody id="rating-table-body">
+                        </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- Модальное окно для редактирования задания -->
-<div id="editModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Редактирование задания</h2>
-            <span class="close-modal" onclick="closeEditModal()">&times;</span>
-        </div>
-        <form id="editForm">
-            <input type="hidden" id="edit-id">
-            
-            <div class="form-group">
-                <label>Название:</label>
-                <input type="text" id="edit-title" required>
+    <div id="editTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Новое задание</h2>
+                <span class="close-modal" onclick="closeEditModal()">&times;</span>
             </div>
-            
-            <div class="form-group">
-                <label>Описание:</label>
-                <textarea id="edit-description" rows="4" required></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>Тип задания:</label>
-                <select id="edit-task-type" onchange="toggleEditFields()">
-                    <option value="auto">Автоматическая проверка</option>
-                    <option value="manual">Ручная проверка</option>
-                </select>
-            </div>
-            
-            <div id="edit-auto-settings" class="form-group" style="display: none;">
-                <label>Тип автоматической проверки:</label>
-                <select id="edit-auto-type">
-                    <option value="likes">Лайки</option>
-                    <option value="comments">Комментарии</option>
-                </select>
-            </div>
-            
-            <div id="edit-format-block" class="form-group" style="display: none;">
-                <label>Формат файла:</label>
-                <select id="edit-file-format">
-                    <option value="PNG, JPG">PNG, JPG</option>
-                    <option value="MOV, MP3, MP4">MOV, MP3, MP4</option>
-                    <option value="DOC, DOCS, PDF, TXT">DOC, DOCS, PDF, TXT</option>
-                </select>
-            </div>
-
-            <div id="edit-posts-block" class="form-group" style="display: none;">
-                <label>Посты (ссылки):</label>
-                <div id="edit-posts-container">
-                    <div class="post-row">
-                        <input type="url" class="edit-post-input" placeholder="https://vk.com/wall...">
-                        <button type="button" class="add-post-btn" onclick="addEditPostRow()">+</button>
+            <form id="editTaskForm">
+                <label>Название</label>
+                <input type="text" id="edit-title" placeholder="Введите название задания" required>
+                
+                <label>Описание задания</label>
+                <textarea id="edit-desc" rows="4" placeholder="Подробно опишите, что нужно сделать..." required></textarea>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Дедлайн</label>
+                        <input type="datetime-local" id="edit-deadline" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Тип проверки</label>
+                        <select id="edit-task-type">
+                            <option value="manual">Ручная (Файл или ссылка)</option>
+                            <option value="auto">Автоматическая (ВКонтакте)</option>
+                        </select>
                     </div>
                 </div>
-                <small class="hint">Введите ссылки на посты для проверки</small>
-            </div>
-            
-            <div class="form-group">
-                <label>Дедлайн:</label>
-                <input type="datetime-local" id="edit-deadline" required>
-            </div>
-            
-            <div class="modal-footer">
-                <button type="submit" class="save-btn">Сохранить</button>
-                <button type="button" class="cancel-btn" onclick="closeEditModal()">Отмена</button>
-            </div>
-        </form>
+
+                <div id="format-block" style="margin-top: 15px;">
+                    <label>Допустимый формат материала</label>
+                    <select id="edit-formats">
+                        <option value="Ссылка">Ссылка на облако / пост</option>
+                        <option value="JPG/PNG">Изображение (JPG, PNG)</option>
+                        <option value="PDF">Документ PDF</option>
+                        <option value="DOCX">Текст Word (DOCX)</option>
+                        <option value="Видео">Ссылка на видео (YouTube/VK)</option>
+                    </select>
+                </div>
+
+                <div id="auto-options" style="display: none; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                    <label>Что проверяем?</label>
+                    <select id="edit-auto-type">
+                        <option value="likes">Лайки (1 балл за пост)</option>
+                        <option value="comments">Комментарии (3 балла за пост)</option>
+                    </select>
+
+                    <div id="links-container" style="margin-top: 15px;">
+                        <label>Ссылки на посты ВК:</label>
+                        <div id="dynamic-links-list">
+                            </div>
+                        <button type="button" class="add-link-btn" onclick="addLinkInput()">+ Добавить ссылку</button>
+                    </div>
+                </div>
+
+                <div id="points-container" style="margin-top: 15px;">
+                    <label>Максимальный балл за задание</label>
+                    <input type="number" id="edit-points" min="1" value="10" placeholder="Например: 50">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="save-btn">Создать задание</button>
+                    <button type="button" class="cancel-btn" onclick="closeEditModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
     <script src="js/admin.js"></script>
 </body>

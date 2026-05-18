@@ -1,35 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход</title>
+    <title>Вход | Медиаконкурс</title>
     <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .divider { text-align: center; color: rgba(255,255,255,0.5); margin: 15px 0; position: relative; }
+        .divider::before, .divider::after { content: ""; position: absolute; top: 50%; width: 40%; height: 1px; background: rgba(255,255,255,0.2); }
+        .divider::before { left: 0; } .divider::after { right: 0; }
+        #VkIdSdkOneTap { width: 100%; max-width: 300px; margin: 0 auto 20px; }
+    </style>
+    <script src="https://unpkg.com/@vkid/sdk@latest/dist-sdk/umd/index.js"></script>
 </head>
 <body>
     <div class="login-container">
-        <h2>Вход в систему</h2>
-        
-        <form id="loginForm">
-            <label>Введите имя пользователя:</label>
-            <br>
-            <input type="text" id="username" placeholder="marianna / olesya / vera" required/>
-            <br>
-            
-            <label>Введите пароль:</label>
-            <br>
-            <input type="password" id="password" placeholder="••••••••" required/>
-            <br>
-            
-            <div class="button-group">
-                <input type="submit" value="Войти" />
-                <input type="reset" value="Очистить" />
-            </div>
-        </form>
-        
-        <div id="message" class="message"></div>
-    </div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showAuthTab('login')">Вход</button>
+            <button class="tab-btn" onclick="showAuthTab('register')">Регистрация</button>
+        </div>
 
+        <div id="login-tab" class="tab-content" style="display: block;">
+            <div id="VkIdSdkOneTap"></div>
+            
+            <div class="divider">или по логину</div>
+
+            <form id="loginForm">
+                <label>Логин</label>
+                <input type="text" id="login-username" required>
+                <label>Пароль</label>
+                <input type="password" id="login-password" required>
+                <div class="button-group">
+                    <input type="submit" value="Войти" style="width: 100%; background-color: #4CAF50; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer;">
+                </div>
+                <div id="login-message" class="message"></div>
+            </form>
+        </div>
+
+        <div id="register-tab" class="tab-content" style="display: none;">
+            <form id="registerForm">
+                <label>ФИО *</label><input type="text" id="reg-fullname" required>
+                <label>Логин *</label><input type="text" id="reg-username" required>
+                <label>Email *</label><input type="email" id="reg-email" required>
+                <label>Пароль *</label><input type="password" id="reg-password" required>
+                <label>Институт *</label>
+                <select id="reg-institute">
+                    <option value="ГИ">ГИ</option>
+                    <option value="ИКНК">ИКНК</option>
+                    <option value="ИПМЭиТ">ИПМЭиТ</option>
+                    <option value="ИСИ">ИСИ</option>
+                    <option value="ИБСиБ">ИБСиБ</option>
+                    <option value="ИЭиТ">ИЭиТ</option>
+                    <option value="Физмех">Физмех</option>
+                    <option value="ИЭ">ИЭ</option>
+                    <option value="ИММИТ">ИММИТ</option>
+                    <option value="ИСПО">ИСПО</option>
+                </select>
+                <label>Ссылка VK *</label><input type="url" id="reg-vk" required>
+                <label>Ссылка TG</label><input type="url" id="reg-tg">
+                <div class="button-group">
+                    <input type="submit" value="Зарегистрироваться">
+                </div>
+                <div id="register-message" class="message"></div>
+            </form>
+        </div>
+    </div>
     <script src="js/login.js"></script>
 </body>
 </html>
