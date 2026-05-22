@@ -413,7 +413,9 @@ async function submitTask() {
         let hasData = false;
 
         if (fileBlock && fileBlock.style.display !== 'none' && fileInput && fileInput.files.length > 0) {
-            formData.append('file', fileInput.files[0]);
+            for (const f of fileInput.files) {
+                formData.append('files', f);
+            }
             hasData = true;
         }
         if (urlBlock && urlBlock.style.display !== 'none' && urlInput && urlInput.value.trim()) {
@@ -446,3 +448,14 @@ async function submitTask() {
         }
     } catch (e) { alert('Ошибка соединения с сервером.'); }
 }
+
+// Счётчик выбранных файлов
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('change', e => {
+        if (e.target.id !== 'submission-file') return;
+        const hint = document.getElementById('file-count-hint');
+        if (!hint) return;
+        const n = e.target.files.length;
+        hint.textContent = n > 0 ? `Выбрано файлов: ${n}` : '';
+    });
+});

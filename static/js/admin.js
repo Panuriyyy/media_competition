@@ -121,7 +121,7 @@ async function loadTasks() {
 }
 
 async function archiveTask(id) {
-    if (!confirm("Перенести в архив?")) return;
+    if (!confirm('Перенести задание в архив?')) return;
     await fetch(`${API_URL}/api/admin/tasks/${id}/archive`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -130,7 +130,7 @@ async function archiveTask(id) {
 }
 
 async function deleteTask(id) {
-    if (!confirm("Удалить задание безвозвратно? Все связанные работы будут удалены.")) return;
+    if (!confirm('Удалить задание безвозвратно? Все связанные работы будут удалены.')) return;
     const res = await fetch(`${API_URL}/api/admin/tasks/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -141,26 +141,47 @@ async function deleteTask(id) {
 
 // ========== ПРОВЕРКА РАБОТ ==========
 
+function renderFileLinks(data) {
+    if (!data) return '—';
+    if (data.startsWith('auto_check')) {
+        return '<span style="opacity:0.6; font-style:italic;">Авто-проверка ВК</span>';
+    }
+    if (data.startsWith('http')) {
+        return `<a href="${escapeHtml(data)}" target="_blank">Ссылка</a>`;
+    }
+    try {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+            return parsed.map((p, i) =>
+                `<a href="${API_URL}${p}" target="_blank" style="display:inline-block; margin:2px 4px 2px 0; padding:2px 8px; background:rgba(255,255,255,0.15); border-radius:4px; font-size:12px;">Файл ${i + 1}</a>`
+            ).join('');
+        }
+    } catch {}
+    return `<a href="${API_URL}${data}" target="_blank">Файл</a>`;
+}
+
 async function loadSubmissions() {
     const tbody = document.getElementById('submissions-table-body');
     const filter = document.getElementById('status-filter').value;
     tbody.innerHTML = '<tr><td colspan="6">Загрузка...</td></tr>';
-    
+
     try {
-        const res = await fetch(`${API_URL}/api/admin/submissions`, { 
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } 
+        const res = await fetch(`${API_URL}/api/admin/submissions`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         let subs = await res.json();
         if (filter !== 'all') subs = subs.filter(s => s.status === filter);
-        
+
         if (subs.length === 0) return tbody.innerHTML = '<tr><td colspan="6">Работ нет</td></tr>';
-        
+
+        const isAuto = s => s.submission_data && s.submission_data.startsWith('auto_check');
+
         tbody.innerHTML = subs.map(s => `
             <tr>
                 <td><strong>${escapeHtml(s.user_name)}</strong></td>
                 <td>${escapeHtml(s.task_title)}</td>
-                <td>${s.submission_data.startsWith('auto_check') ? `<span style="opacity:0.6; font-style:italic;">Авто-проверка ВК</span>` : s.submission_data.startsWith('http') ? `<a href="${s.submission_data}" target="_blank">Ссылка</a>` : `<a href="${API_URL}${s.submission_data}" target="_blank">Файл</a>`}</td>
-                <td>${s.submission_data.startsWith('auto_check') ? (() => {
+                <td>${renderFileLinks(s.submission_data)}</td>
+                <td>${isAuto(s) ? (() => {
                     const statusMap = {pending: 'Ожидает', approved: 'Принято', rejected: 'Отклонено'};
                     const color = s.status === 'approved' ? '#a5d6a7' : s.status === 'rejected' ? '#ff8a80' : '#ffcc80';
                     return `<span style="color:${color}; font-size:13px;">${statusMap[s.status] || s.status}</span>`;
@@ -171,12 +192,12 @@ async function loadSubmissions() {
                     </select>`}
                 </td>
                 <td>
-                    ${s.submission_data.startsWith('auto_check')
+                    ${isAuto(s)
                         ? `<span style="font-weight:600;">${s.score}</span> <span style="font-size:11px; opacity:0.6;">/ ${s.max_points}</span>`
                         : `<input type="number" value="${s.score}" onchange="updateSubScore(${s.id}, this.value)" class="table-input" style="width:60px;">
                            <span style="font-size:11px; opacity:0.6;">/ ${s.max_points}</span>`}
                 </td>
-                <td>${s.submission_data.startsWith('auto_check') ? '' : `<button class="save-small-btn" onclick="saveReview(${s.id})">Ок</button>`}</td>
+                <td>${isAuto(s) ? '' : `<button class="save-small-btn" onclick="saveReview(${s.id})">Ок</button>`}</td>
             </tr>
         `).join('');
     } catch (e) { tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки</td></tr>'; }
@@ -187,7 +208,7 @@ function updateSubStatus(id, val) { reviewChanges[id] = { ...reviewChanges[id], 
 function updateSubScore(id, val) { reviewChanges[id] = { ...reviewChanges[id], score: parseFloat(val) }; }
 
 async function saveReview(id) {
-    if (!reviewChanges[id]) return alert('Нет изменений');
+    if (!reviewChanges[id]) return alert('Нет изменений для сохранения');
     const fd = new FormData();
     fd.append('status', reviewChanges[id].status || 'pending');
     fd.append('score', reviewChanges[id].score || 0);
@@ -197,7 +218,7 @@ async function saveReview(id) {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, 
         body: fd 
     });
-    if (res.ok) { alert('Сохранено!'); loadSubmissions(); loadRating(); }
+    if (res.ok) { alert('Оценка сохранена!'); loadSubmissions(); loadRating(); }
 }
 
 // ========== РЕЙТИНГ ==========
@@ -280,7 +301,7 @@ function setupCreateForm() {
             body: JSON.stringify(payload) 
         });
         
-        if (res.ok) { alert('Создано!'); closeEditModal(); loadTasks(); }
+        if (res.ok) { alert('Задание создано!'); closeEditModal(); loadTasks(); }
         else { const err = await res.json(); alert(`Ошибка: ${err.detail}`); }
     });
 }

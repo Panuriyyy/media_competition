@@ -68,7 +68,7 @@ async def deadline_notification_loop():
 
                 for task in tasks:
                     notif_title = f"Дедлайн задания через 1 день"
-                    notif_msg = f'До дедлайна задания "{task.name_tasks}" остался 1 день. Успейте сдать работу!'
+                    notif_msg = f'До дедлайна задания «{task.name_tasks}» остался 1 день. Успейте сдать работу!'
 
                     participants_res = await db.execute(
                         select(User).where(User.role_user == "participant")
@@ -133,7 +133,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = "uploads"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
@@ -335,7 +336,7 @@ async def create_task(
             notification = Notification(
                 id_user=user.id_user,
                 title="Новое задание!",
-                message=f"Опубликовано задание '{new_task.name_tasks}'. Максимальный балл: {points_to_save}",
+                message=f"Опубликовано задание «{new_task.name_tasks}». Максимальный балл: {points_to_save}",
             )
             db.add(notification)
 
@@ -420,7 +421,7 @@ async def list_available_tasks(
 async def submit_task_solution(
     task_id: int,
     submission_url: Optional[str] = Form(None),
-    file: Optional[UploadFile] = File(None),
+    files: List[UploadFile] = File(default=[]),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(auth.get_current_user),
 ):
@@ -489,19 +490,23 @@ async def submit_task_solution(
         db.add(check)
 
     else:  # manual
-        if file:
-            filename = file.filename.lower()
-            ext = os.path.splitext(filename)[1]
+        valid_files = [f for f in files if f and f.filename]
+        if valid_files:
+            saved_paths = []
+            ts = int(datetime.now().timestamp())
+            for i, file in enumerate(valid_files):
+                filename = file.filename.lower()
+                ext = os.path.splitext(filename)[1]
+                unique_name = f"user_{current_user.id_user}_task_{task_id}_{ts}_{i}{ext}"
+                file_path = os.path.join(UPLOAD_DIR, unique_name)
+                contents = await file.read()
+                with open(file_path, "wb") as f:
+                    f.write(contents)
+                saved_paths.append(f"/uploads/{unique_name}")
 
-            # Сохранение файла
-            unique_name = f"user_{current_user.id_user}_task_{task_id}_{datetime.now().timestamp()}{ext}"
-            file_path = os.path.join(UPLOAD_DIR, unique_name)
-
-            contents = await file.read()
-            with open(file_path, "wb") as f:
-                f.write(contents)
-
-            submission.url_participant = f"/uploads/{unique_name}"
+            submission.url_participant = (
+                json.dumps(saved_paths) if len(saved_paths) > 1 else saved_paths[0]
+            )
 
         elif submission_url:
             submission.url_participant = submission_url
