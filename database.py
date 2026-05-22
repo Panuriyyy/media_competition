@@ -1,41 +1,41 @@
 import os
-from urllib.parse import urlparse, quote, urlunparse
+import re
+from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+_raw_url = os.getenv("DATABASE_URL")
 
-if not DATABASE_URL:
+if not _raw_url:
     raise ValueError("DATABASE_URL не задан в файле .env!")
 
-# Нормализуем префикс
-if DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+# Парсим URL вручную через regex — надёжно работает с любыми спецсимволами в пароле
+_match = re.match(
+    r"^(?:postgresql(?:\+asyncpg)?://)"
+    r"(?P<user>[^:]+):(?P<password>.+)@"
+    r"(?P<host>[^/:]+)(?::(?P<port>\d+))?/(?P<db>[^?]+)",
+    _raw_url,
+)
 
-# URL-кодируем пароль, чтобы спецсимволы не ломали подключение
-try:
-    parsed = urlparse(DATABASE_URL)
-    if parsed.password:
-        safe_password = quote(parsed.password, safe="")
-        netloc = f"{parsed.username}:{safe_password}@{parsed.hostname}"
-        if parsed.port:
-            netloc += f":{parsed.port}"
-        DATABASE_URL = urlunparse((
-            parsed.scheme,
-            netloc,
-            parsed.path,
-            parsed.params,
-            parsed.query,
-            parsed.fragment,
-        ))
-except Exception:
-    pass
+if not _match:
+    raise ValueError("Неверный формат DATABASE_URL!")
+
+# Строим URL через SQLAlchemy — он сам корректно кодирует пароль
+engine_url = URL.create(
+    drivername="postgresql+asyncpg",
+    username=_match.group("user"),
+    password=_match.group("password"),
+    host=_match.group("host"),
+    port=int(_match.group("port")) if _match.group("port") else 5432,
+    database=_match.group("db"),
+    query={"ssl": "require"},
+)
 
 engine = create_async_engine(
-    DATABASE_URL,
+    engine_url,
     echo=False,
     future=True,
     pool_pre_ping=True,
