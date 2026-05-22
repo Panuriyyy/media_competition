@@ -1,5 +1,4 @@
 import os
-import re
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -7,32 +6,32 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-_raw_url = os.getenv("DATABASE_URL")
+# Поддержка двух форматов .env:
+# 1) Отдельные переменные: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+# 2) Единая строка: DATABASE_URL (как запасной вариант)
+_host = os.getenv("DB_HOST")
+_user = os.getenv("DB_USER")
+_password = os.getenv("DB_PASSWORD")
+_name = os.getenv("DB_NAME")
 
-if not _raw_url:
-    raise ValueError("DATABASE_URL не задан в файле .env!")
-
-# Парсим URL вручную через regex — надёжно работает с любыми спецсимволами в пароле
-_match = re.match(
-    r"^(?:postgresql(?:\+asyncpg)?://)"
-    r"(?P<user>[^:]+):(?P<password>.+)@"
-    r"(?P<host>[^/:]+)(?::(?P<port>\d+))?/(?P<db>[^?]+)",
-    _raw_url,
-)
-
-if not _match:
-    raise ValueError("Неверный формат DATABASE_URL!")
-
-# Строим URL через SQLAlchemy — он сам корректно кодирует пароль
-engine_url = URL.create(
-    drivername="postgresql+asyncpg",
-    username=_match.group("user"),
-    password=_match.group("password"),
-    host=_match.group("host"),
-    port=int(_match.group("port")) if _match.group("port") else 5432,
-    database=_match.group("db"),
-    query={"ssl": "require"},
-)
+if _host and _user and _password and _name:
+    engine_url = URL.create(
+        drivername="postgresql+asyncpg",
+        username=_user,
+        password=_password,
+        host=_host,
+        port=5432,
+        database=_name,
+        query={"ssl": "require"},
+    )
+else:
+    # Запасной вариант — DATABASE_URL
+    _raw_url = os.getenv("DATABASE_URL")
+    if not _raw_url:
+        raise ValueError("Не заданы DB_HOST/DB_USER/DB_PASSWORD/DB_NAME или DATABASE_URL!")
+    if _raw_url.startswith("postgresql://"):
+        _raw_url = _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    engine_url = _raw_url
 
 engine = create_async_engine(
     engine_url,
