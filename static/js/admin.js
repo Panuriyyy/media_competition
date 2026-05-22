@@ -33,31 +33,49 @@ async function loadAdminInfo() {
     } catch (e) { console.error(e); }
 }
 
-async function loadDashboard() {
-    try {
-        const res = await fetch(`${API_URL}/api/stats/dashboard`, { 
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } 
-        });
-        if (res.ok) {
-            const data = await res.json();
-            document.getElementById('dash-users').textContent = data.total_users;
-            document.getElementById('institutes-list').innerHTML = data.institutes_activity.map(i => 
-                `<div class="stat-row"><span>${escapeHtml(i.institute)}</span><strong>${i.count} чел.</strong></div>`
-            ).join('');
-        }
-    } catch (e) { console.error(e); }
-}
-
 function showMainTab(tabName) {
     document.querySelectorAll('.main-tab').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
     document.querySelectorAll('.tab-block').forEach(b => b.style.display = 'none');
     document.getElementById(`${tabName}-block`).style.display = 'block';
-    
+
     if (tabName === 'dashboard') loadDashboard();
     if (tabName === 'tasks') loadTasks();
     if (tabName === 'submissions') loadSubmissions();
     if (tabName === 'rating') loadRating();
+    if (tabName === 'about') loadAbout();
+    if (tabName === 'faq') loadFaqAdmin();
+}
+
+// ========== ДАШБОРД: статистика по заданиям ==========
+
+async function loadDashboard() {
+    try {
+        const res = await fetch(`${API_URL}/api/stats/dashboard`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            document.getElementById('dash-users').textContent = data.total_users;
+            document.getElementById('institutes-list').innerHTML = data.institutes_activity.map(i =>
+                `<div class="stat-row"><span>${escapeHtml(i.institute)}</span><strong>${i.count} чел.</strong></div>`
+            ).join('');
+
+            const tasksList = document.getElementById('tasks-stats-list');
+            if (tasksList) {
+                if (!data.tasks_stats || !data.tasks_stats.length) {
+                    tasksList.innerHTML = '<p style="opacity:0.6;">Заданий нет</p>';
+                } else {
+                    tasksList.innerHTML = data.tasks_stats.map(t => `
+                        <div class="stat-row">
+                            <span>${escapeHtml(t.title)}</span>
+                            <strong>${t.completed_count} участн.</strong>
+                        </div>`
+                    ).join('');
+                }
+            }
+        }
+    } catch (e) { console.error(e); }
 }
 
 // ========== ЗАДАНИЯ ==========
@@ -71,7 +89,7 @@ function switchTaskStatus(status) {
 
 async function loadTasks() {
     try {
-        const res = await fetch(`${API_URL}/api/admin/tasks`, { 
+        const res = await fetch(`${API_URL}/api/tasks`, { 
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } 
         });
         const tasks = await res.json();
@@ -87,7 +105,12 @@ async function loadTasks() {
                     </div>
                 </div>
                 <div class="task-actions">
-                    ${!isArch ? `<button class="archive-btn" onclick="archiveTask(${t.id})">В архив</button>` : '<span>Архивировано</span>'}
+                    ${!isArch ? `
+                        <button onclick='openEditExistingModal(${JSON.stringify(t)})'>Изменить</button>
+                        <button class="btn-danger" onclick="archiveTask(${t.id})">В архив</button>
+                    ` : `
+                        <button class="btn-danger" onclick="deleteTask(${t.id})">Удалить</button>
+                    `}
                 </div>
             </div>
         `).join('');
@@ -99,11 +122,21 @@ async function loadTasks() {
 
 async function archiveTask(id) {
     if (!confirm("Перенести в архив?")) return;
-    await fetch(`${API_URL}/api/admin/tasks/${id}/archive`, { 
-        method: 'POST', 
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } 
+    await fetch(`${API_URL}/api/admin/tasks/${id}/archive`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });
     loadTasks();
+}
+
+async function deleteTask(id) {
+    if (!confirm("Удалить задание безвозвратно? Все связанные работы будут удалены.")) return;
+    const res = await fetch(`${API_URL}/api/admin/tasks/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+    if (res.ok) loadTasks();
+    else alert('Ошибка удаления');
 }
 
 // ========== ПРОВЕРКА РАБОТ ==========
@@ -126,19 +159,24 @@ async function loadSubmissions() {
             <tr>
                 <td><strong>${escapeHtml(s.user_name)}</strong></td>
                 <td>${escapeHtml(s.task_title)}</td>
-                <td>${s.submission_data.startsWith('http') ? `<a href="${s.submission_data}" target="_blank">Ссылка</a>` : `<a href="${API_URL}${s.submission_data}" target="_blank">Файл</a>`}</td>
-                <td>
-                    <select onchange="updateSubStatus(${s.id}, this.value)" class="table-select">
+                <td>${s.submission_data.startsWith('auto_check') ? `<span style="opacity:0.6; font-style:italic;">Авто-проверка ВК</span>` : s.submission_data.startsWith('http') ? `<a href="${s.submission_data}" target="_blank">Ссылка</a>` : `<a href="${API_URL}${s.submission_data}" target="_blank">Файл</a>`}</td>
+                <td>${s.submission_data.startsWith('auto_check') ? (() => {
+                    const statusMap = {pending: 'Ожидает', approved: 'Принято', rejected: 'Отклонено'};
+                    const color = s.status === 'approved' ? '#a5d6a7' : s.status === 'rejected' ? '#ff8a80' : '#ffcc80';
+                    return `<span style="color:${color}; font-size:13px;">${statusMap[s.status] || s.status}</span>`;
+                })() : `<select onchange="updateSubStatus(${s.id}, this.value)" class="table-select">
                         <option value="pending" ${s.status === 'pending' ? 'selected' : ''}>Ожидает</option>
                         <option value="approved" ${s.status === 'approved' ? 'selected' : ''}>Принято</option>
                         <option value="rejected" ${s.status === 'rejected' ? 'selected' : ''}>Отклонено</option>
-                    </select>
+                    </select>`}
                 </td>
                 <td>
-                    <input type="number" value="${s.score}" onchange="updateSubScore(${s.id}, this.value)" class="table-input" style="width: 60px;">
-                    <span style="font-size: 11px; opacity: 0.6;">/ ${s.max_points}</span>
+                    ${s.submission_data.startsWith('auto_check')
+                        ? `<span style="font-weight:600;">${s.score}</span> <span style="font-size:11px; opacity:0.6;">/ ${s.max_points}</span>`
+                        : `<input type="number" value="${s.score}" onchange="updateSubScore(${s.id}, this.value)" class="table-input" style="width:60px;">
+                           <span style="font-size:11px; opacity:0.6;">/ ${s.max_points}</span>`}
                 </td>
-                <td><button class="save-small-btn" onclick="saveReview(${s.id})">Ок</button></td>
+                <td>${s.submission_data.startsWith('auto_check') ? '' : `<button class="save-small-btn" onclick="saveReview(${s.id})">Ок</button>`}</td>
             </tr>
         `).join('');
     } catch (e) { tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки</td></tr>'; }
@@ -168,21 +206,27 @@ async function loadRating() {
     const tbody = document.getElementById('rating-table-body');
     if (!tbody) return;
     try {
-        const res = await fetch(`${API_URL}/api/reports/csv`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-        const text = await res.text();
-        const rows = text.split('\n').slice(1).filter(r => r.trim());
-        
-        const sorted = rows.map(r => r.split(';')).sort((a, b) => b[2] - a[2]);
+        const res = await fetch(`${API_URL}/api/rating`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const ratings = data.ratings || [];
 
-        tbody.innerHTML = sorted.map((r, i) => `
+        if (!ratings.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет данных</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = ratings.map((r, i) => `
             <tr>
                 <td>${i + 1}</td>
-                <td>${escapeHtml(r[0])}</td>
-                <td>${escapeHtml(r[1])}</td>
-                <td><strong>${r[2]}</strong></td>
+                <td>${escapeHtml(r.full_name)}</td>
+                <td>${escapeHtml(r.institute)}</td>
+                <td><strong>${r.total_score}</strong></td>
             </tr>
         `).join('');
-    } catch (e) {}
+    } catch (e) { console.error(e); }
 }
 
 // ========== СОЗДАНИЕ ЗАДАНИЯ ==========
@@ -226,7 +270,8 @@ function setupCreateForm() {
             auto_type: isAuto ? autoType : null,
             points_at_stake: points,
             deadline: document.getElementById('edit-deadline').value + ":00",
-            posts_urls: isAuto ? links : []
+            posts_urls: isAuto ? links : [],
+            format_type: isAuto ? null : format
         };
 
         const res = await fetch(`${API_URL}/api/tasks`, { 
@@ -261,3 +306,252 @@ function downloadReport(f) {
 }
 
 function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+// ========== РЕДАКТИРОВАНИЕ ЗАДАНИЯ ==========
+
+function openEditExistingModal(task) {
+    document.getElementById('edit-existing-id').value = task.id;
+    document.getElementById('edit-existing-title').value = task.title;
+    document.getElementById('edit-existing-desc').value = task.description;
+    document.getElementById('edit-existing-deadline').value = task.deadline
+        ? task.deadline.replace('Z','').slice(0,16) : '';
+    document.getElementById('edit-existing-type').value = task.task_type;
+    document.getElementById('edit-existing-auto-type').value = task.auto_type || 'likes';
+    document.getElementById('edit-existing-points').value = task.points_at_stake || 10;
+
+    // Заполняем ссылки для авто-заданий
+    const linksList = document.getElementById('edit-existing-links-list');
+    linksList.innerHTML = '';
+    const urls = Array.isArray(task.posts_urls) ? task.posts_urls : [];
+    if (urls.length) {
+        urls.forEach(u => addExistingLinkInput(u));
+    } else {
+        addExistingLinkInput();
+    }
+
+    toggleExistingTypeSettings();
+    document.getElementById('editExistingTaskModal').style.display = 'flex';
+}
+
+function closeEditExistingModal() {
+    document.getElementById('editExistingTaskModal').style.display = 'none';
+}
+
+function toggleExistingTypeSettings() {
+    const isAuto = document.getElementById('edit-existing-type').value === 'auto';
+    document.getElementById('edit-existing-auto-options').style.display = isAuto ? 'block' : 'none';
+    document.getElementById('edit-existing-format-block').style.display = isAuto ? 'none' : 'block';
+    document.getElementById('edit-existing-points-container').style.display = isAuto ? 'none' : 'block';
+}
+
+function addExistingLinkInput(value = '') {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex; gap:10px; margin-bottom:10px;';
+    div.innerHTML = `
+        <input type="url" class="existing-link-input" value="${escapeHtml(value)}"
+            placeholder="https://vk.com/wall..." style="flex:1; padding:8px; border-radius:4px; border:none;">
+        <button type="button" onclick="this.parentElement.remove()"
+            style="background:#ff4444; color:white; border:none; padding:0 15px; border-radius:4px; cursor:pointer;">&times;</button>`;
+    document.getElementById('edit-existing-links-list').appendChild(div);
+}
+
+document.getElementById('editExistingTaskForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('edit-existing-id').value;
+    const isAuto = document.getElementById('edit-existing-type').value === 'auto';
+    const autoType = document.getElementById('edit-existing-auto-type').value;
+    const format = document.getElementById('edit-existing-format').value;
+    const links = Array.from(document.querySelectorAll('.existing-link-input'))
+        .map(i => i.value.trim()).filter(v => v);
+    const points = isAuto
+        ? links.length * (autoType === 'likes' ? 1 : 3)
+        : parseFloat(document.getElementById('edit-existing-points').value) || 0;
+
+    const payload = {
+        title: document.getElementById('edit-existing-title').value,
+        description: document.getElementById('edit-existing-desc').value,
+        task_type: document.getElementById('edit-existing-type').value,
+        auto_type: isAuto ? autoType : null,
+        points_at_stake: points,
+        deadline: document.getElementById('edit-existing-deadline').value + ':00',
+        posts_urls: isAuto ? links : [],
+        format_type: isAuto ? null : format,
+    };
+
+    const res = await fetch(`${API_URL}/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+        closeEditExistingModal();
+        loadTasks();
+    } else {
+        const err = await res.json();
+        alert(`Ошибка: ${err.detail}`);
+    }
+});
+
+// ========== О КОНКУРСЕ ==========
+
+async function loadAbout() {
+    try {
+        const res = await fetch(`${API_URL}/api/about`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        document.getElementById('about-view').textContent = data.content || '(Текст о конкурсе не заполнен)';
+        document.getElementById('about-textarea').value = data.content || '';
+
+        const newsList = document.getElementById('news-list');
+        if (!data.news.length) {
+            newsList.innerHTML = '<p style="opacity:0.6;">Новостей нет</p>';
+        } else {
+            newsList.innerHTML = data.news.map(n => `
+                <div style="background:rgba(255,255,255,0.07); border-radius:8px; padding:15px; margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <strong>${escapeHtml(n.title)}</strong>
+                        <div style="display:flex; gap:8px; flex-shrink:0; margin-left:15px;">
+                            <button class="save-small-btn" onclick="openNewsModal(${JSON.stringify(n).replace(/'/g, '&#39;')})">Изм.</button>
+                            <button class="archive-btn" onclick="deleteNews(${n.id})">Удал.</button>
+                        </div>
+                    </div>
+                    <p style="margin-top:8px; opacity:0.85; white-space:pre-wrap;">${escapeHtml(n.content)}</p>
+                    <small style="opacity:0.5;">${new Date(n.created_at).toLocaleDateString()}</small>
+                </div>`
+            ).join('');
+        }
+    } catch (e) { console.error(e); }
+}
+
+function toggleAboutEdit() {
+    const view = document.getElementById('about-view');
+    const edit = document.getElementById('about-edit');
+    const isEditing = edit.style.display !== 'none';
+    view.style.display = isEditing ? 'block' : 'none';
+    edit.style.display = isEditing ? 'none' : 'block';
+}
+
+async function saveAbout() {
+    const content = document.getElementById('about-textarea').value;
+    const fd = new FormData();
+    fd.append('content', content);
+    const res = await fetch(`${API_URL}/api/admin/about`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: fd,
+    });
+    if (res.ok) {
+        document.getElementById('about-view').textContent = content;
+        toggleAboutEdit();
+    } else {
+        alert('Ошибка сохранения');
+    }
+}
+
+// Новости
+function openNewsModal(news = null) {
+    document.getElementById('news-edit-id').value = news ? news.id : '';
+    document.getElementById('news-title-input').value = news ? news.title : '';
+    document.getElementById('news-content-input').value = news ? news.content : '';
+    document.getElementById('news-modal-title').textContent = news ? 'Редактировать новость' : 'Добавить новость';
+    document.getElementById('newsModal').style.display = 'flex';
+}
+
+function closeNewsModal() { document.getElementById('newsModal').style.display = 'none'; }
+
+document.getElementById('newsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('news-edit-id').value;
+    const fd = new FormData();
+    fd.append('title', document.getElementById('news-title-input').value);
+    fd.append('content', document.getElementById('news-content-input').value);
+
+    const url = id ? `${API_URL}/api/admin/news/${id}` : `${API_URL}/api/admin/news`;
+    const method = id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+        method,
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: fd,
+    });
+    if (res.ok) { closeNewsModal(); loadAbout(); }
+    else { const err = await res.json(); alert(`Ошибка: ${err.detail}`); }
+});
+
+async function deleteNews(id) {
+    if (!confirm('Удалить новость?')) return;
+    await fetch(`${API_URL}/api/admin/news/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+    });
+    loadAbout();
+}
+
+// ========== FAQ ==========
+
+async function loadFaqAdmin() {
+    try {
+        const res = await fetch(`${API_URL}/api/faq`);
+        if (!res.ok) return;
+        const items = await res.json();
+        const list = document.getElementById('faq-admin-list');
+        if (!items.length) {
+            list.innerHTML = '<p style="opacity:0.6;">Вопросов нет. Добавьте первый!</p>';
+            return;
+        }
+        list.innerHTML = items.map(f => `
+            <div style="background:rgba(255,255,255,0.07); border-radius:8px; padding:15px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <strong>${escapeHtml(f.question)}</strong>
+                    <div style="display:flex; gap:8px; flex-shrink:0; margin-left:15px;">
+                        <button class="save-small-btn" onclick="openFaqModal(${JSON.stringify(f).replace(/'/g,'&#39;')})">Изм.</button>
+                        <button class="archive-btn" onclick="deleteFaq(${f.id})">Удал.</button>
+                    </div>
+                </div>
+                <p style="margin-top:8px; opacity:0.85; white-space:pre-wrap;">${escapeHtml(f.answer)}</p>
+            </div>`
+        ).join('');
+    } catch (e) { console.error(e); }
+}
+
+function openFaqModal(item = null) {
+    document.getElementById('faq-edit-id').value = item ? item.id : '';
+    document.getElementById('faq-question-input').value = item ? item.question : '';
+    document.getElementById('faq-answer-input').value = item ? item.answer : '';
+    document.getElementById('faq-order-input').value = item ? (item.order_num || 0) : 0;
+    document.getElementById('faq-modal-title').textContent = item ? 'Редактировать вопрос' : 'Добавить вопрос';
+    document.getElementById('faqModal').style.display = 'flex';
+}
+
+function closeFaqModal() { document.getElementById('faqModal').style.display = 'none'; }
+
+document.getElementById('faqForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('faq-edit-id').value;
+    const fd = new FormData();
+    fd.append('question', document.getElementById('faq-question-input').value);
+    fd.append('answer', document.getElementById('faq-answer-input').value);
+    fd.append('order_num', document.getElementById('faq-order-input').value || 0);
+
+    const url = id ? `${API_URL}/api/admin/faq/${id}` : `${API_URL}/api/admin/faq`;
+    const method = id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+        method,
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: fd,
+    });
+    if (res.ok) { closeFaqModal(); loadFaqAdmin(); }
+    else { const err = await res.json(); alert(`Ошибка: ${err.detail}`); }
+});
+
+async function deleteFaq(id) {
+    if (!confirm('Удалить вопрос?')) return;
+    await fetch(`${API_URL}/api/admin/faq/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+    });
+    loadFaqAdmin();
+}

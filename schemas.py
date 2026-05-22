@@ -64,11 +64,19 @@ class Token(BaseModel):
 class TaskCreate(BaseModel):
     title: str = Field(..., min_length=3)
     description: str = Field(..., min_length=10)
-    task_type: str
+    task_type: str  # auto / manual
     auto_type: Optional[str] = None
     points_at_stake: float = Field(..., ge=0)
     deadline: datetime
     posts_urls: Optional[List[str]] = None
+    format_type: Optional[str] = None
+
+    @field_validator("task_type")
+    @classmethod
+    def validate_task_type(cls, v):
+        if v not in ["auto", "manual"]:
+            raise ValueError("task_type must be 'auto' or 'manual'")
+        return v
 
 
 class TaskOut(TaskCreate):

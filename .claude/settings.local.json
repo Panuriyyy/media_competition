@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python admin.py)",
+      "Bash(pip install *)",
+      "Bash(python -c \"import main\")"
+    ]
+  }
+}

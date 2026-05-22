@@ -85,9 +85,9 @@ body {
 }
 
 .logout-btn {
-    background: #f44336;
+    background: rgba(255, 255, 255, 0.15);
     color: white;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     padding: 8px 16px;
     border-radius: 5px;
     cursor: pointer;
@@ -98,8 +98,7 @@ body {
 }
 
 .logout-btn:hover {
-    background: #da190b;
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.25);
 }
 
 /* Кнопка создания задания */
@@ -167,7 +166,64 @@ body {
     border-radius: 3px 3px 0 0;
 }
 
+/* ===== ВКЛАДКИ АКТИВНЫЕ / АРХИВ ===== */
+.task-tabs-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.task-tabs {
+    display: flex;
+    gap: 6px;
+}
+
+.task-tab {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Onest', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 6px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.task-tab:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.task-tab.active {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    font-weight: 600;
+}
+
+/* ===== ШАПКА БЛОКОВ (заголовок + кнопка) ===== */
+.submissions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
 /* ===== ЗАДАНИЯ ===== */
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
 .tasks-grid {
     display: flex;
     flex-direction: column;
@@ -230,22 +286,39 @@ body {
     margin-top: 15px;
 }
 
+.task-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
 .task-actions button {
-    padding: 8px 16px;
-    border: none;
+    padding: 6px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 5px;
     font-family: 'Onest', sans-serif;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
-    transition: 0.3s;
-    background: #f44336;
-    color: white;
+    transition: 0.2s;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .task-actions button:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.18);
+    color: white;
+}
+
+.task-actions .btn-danger {
+    border-color: rgba(244, 67, 54, 0.5);
+    color: rgba(255, 120, 110, 0.9);
+}
+
+.task-actions .btn-danger:hover {
+    background: rgba(244, 67, 54, 0.15);
+    color: #ff8a80;
 }
 
 /* ===== СТАТИСТИКА ===== */
@@ -320,13 +393,20 @@ tr:hover {
 
 .table-select, .table-input {
     width: 100%;
-    padding: 8px;
-    border-radius: 4px;
-    border: none;
-    background: #ffffff;
-    color: #000000;
+    padding: 7px 10px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: #1a3020;
+    color: white;
     font-family: 'Onest', sans-serif;
     font-weight: 500;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+}
+
+.table-select:focus, .table-input:focus {
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 .save-small-btn {
@@ -374,6 +454,9 @@ tr:hover {
 
 .download-btn.csv-btn { background-color: #28a745; }
 .download-btn.csv-btn:hover { background-color: #218838; }
+
+.download-btn.xlsx-btn { background-color: #1D6F42; }
+.download-btn.xlsx-btn:hover { background-color: #155232; }
 
 /* ===== МОДАЛЬНОЕ ОКНО ===== */
 .modal {
@@ -451,8 +534,7 @@ tr:hover {
 }
 
 #editTaskForm input,
-#editTaskForm textarea,
-#editTaskForm select {
+#editTaskForm textarea {
     width: 100%;
     padding: 12px 15px;
     border: none;
@@ -550,19 +632,6 @@ tr:hover {
     .button-group { flex-direction: column; }
 }
 
-.table-select {
-    padding: 5px 10px;
-    border-radius: 5px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background-color: #2c2f33; /* Темный фон под твой дизайн */
-    color: white;
-    cursor: pointer;
-    outline: none;
-}
-.table-select:focus {
-    border-color: #4CAF50;
-}
-
 .modal-footer {
     display: flex;
     gap: 15px;
@@ -591,3 +660,181 @@ tr:hover {
     flex: 1;
 }
 .cancel-btn:hover { background-color: rgba(255, 68, 68, 0.1); }
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background-color: #1a3020;
+    color: white;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+}
+
+select:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Стили для кнопок в таблице заданий */
+.cancel-btn, .archive-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 120, 110, 0.9);
+    padding: 6px 14px;
+    border: 1px solid rgba(244, 67, 54, 0.4);
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.2s;
+    font-family: 'Onest', sans-serif;
+}
+
+.cancel-btn:hover, .archive-btn:hover {
+    background: rgba(244, 67, 54, 0.15);
+    color: #ff8a80;
+}
+
+.save-btn, .active-btn {
+    background: rgba(76, 175, 80, 0.2);
+    color: #a5d6a7;
+    padding: 8px 15px;
+    border: 1px solid rgba(76, 175, 80, 0.4);
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.2s;
+    font-family: 'Onest', sans-serif;
+}
+
+.save-btn:hover, .active-btn:hover {
+    background: rgba(76, 175, 80, 0.3);
+    color: #c8e6c9;
+}
+
+/* ===== ОБЩИЕ СТИЛИ ДЛЯ ФОРМ В МОДАЛЬНЫХ ОКНАХ ===== */
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-content label {
+    color: white;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.modal-content input[type="text"],
+.modal-content input[type="url"],
+.modal-content input[type="number"],
+.modal-content input[type="datetime-local"],
+.modal-content textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Onest', sans-serif;
+    font-size: 14px;
+    background: white;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.modal-content textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+.modal-content .form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.modal-content .form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.add-link-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px dashed rgba(255,255,255,0.4);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.2s;
+    width: 100%;
+    margin-top: 5px;
+}
+
+.add-link-btn:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+/* ===== О КОНКУРСЕ — ОТСТУПЫ ===== */
+.about-section-header {
+    margin-bottom: 12px;
+}
+
+.about-edit-btn {
+    margin-bottom: 15px;
+}
+
+/* ===== ЗАГРУЗКА ФАЙЛА ===== */
+input[type="file"] {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-family: 'Onest', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 6px;
+}
+
+input[type="file"]:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+input[type="file"]::file-selector-button {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    color: white;
+    padding: 5px 12px;
+    margin-right: 12px;
+    cursor: pointer;
+    font-family: 'Onest', sans-serif;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Адаптивность для основных вкладок (6 вкладок) */
+@media (max-width: 900px) {
+    .main-tab {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+}
+
+@media (max-width: 600px) {
+    .main-tab {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+}

@@ -29,15 +29,19 @@
             <div id="notifications-list"></div>
         </div>
 
-        <div class="main-tabs" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px;">
-            <button class="main-tab active" onclick="switchUserTab('active')">АКТИВНЫЕ ЗАДАНИЯ</button>
-            <button class="main-tab" onclick="switchUserTab('history')">ВЫПОЛНЕННЫЕ (ИСТОРИЯ)</button>
+        <div class="main-tabs">
+            <button class="main-tab active" onclick="switchUserTab('active')">Задания</button>
+            <button class="main-tab" onclick="switchUserTab('history')">История</button>
+            <button class="main-tab" onclick="switchUserTab('rating')">Рейтинг</button>
+            <button class="main-tab" onclick="switchUserTab('about')">О конкурсе</button>
         </div>
 
+        <!-- АКТИВНЫЕ ЗАДАНИЯ -->
         <div id="active-tasks-block" class="tab-block" style="display: block;">
             <div id="tasks-list" class="tasks-grid"></div>
         </div>
 
+        <!-- ИСТОРИЯ -->
         <div id="history-tasks-block" class="tab-block" style="display: none;">
             <div class="table-container">
                 <table style="width: 100%; color: white; border-collapse: collapse;">
@@ -53,6 +57,71 @@
                 </table>
             </div>
         </div>
+
+        <!-- РЕЙТИНГ -->
+        <div id="rating-tasks-block" class="tab-block" style="display: none;">
+            <div id="user-rank-banner" style="background:rgba(255,255,255,0.1); border-radius:10px; padding:15px 20px; margin-bottom:20px; display:flex; align-items:center; gap:20px;">
+                <div style="font-size:2em;">🏆</div>
+                <div>
+                    <div style="font-size:0.9em; opacity:0.7;">Ваше место</div>
+                    <div id="user-rank-place" style="font-size:1.8em; font-weight:700;">—</div>
+                </div>
+                <div style="margin-left:20px;">
+                    <div style="font-size:0.9em; opacity:0.7;">Ваши баллы</div>
+                    <div id="user-rank-score" style="font-size:1.8em; font-weight:700;">0</div>
+                </div>
+            </div>
+            <div class="table-container">
+                <table style="width:100%; color:white; border-collapse:collapse;">
+                    <thead>
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.2); text-align:left;">
+                            <th style="padding:10px;">Место</th>
+                            <th style="padding:10px;">ФИО</th>
+                            <th style="padding:10px;">Институт</th>
+                            <th style="padding:10px;">Баллы</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rating-table-body-user"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- О КОНКУРСЕ -->
+        <div id="about-tasks-block" class="tab-block" style="display: none;">
+            <div id="about-content-user" style="background:rgba(255,255,255,0.07); border-radius:10px; padding:24px; margin-bottom:35px; min-height:80px; white-space:pre-wrap; line-height:1.6; opacity:0.9;">
+                Загрузка...
+            </div>
+            <h3 style="color:white; margin-bottom:20px; font-size:18px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.15);">Новости и объявления</h3>
+            <div id="news-list-user" style="margin-top:5px;"></div>
+        </div>
+        <footer class="social-footer">
+            <a href="https://vk.ru/polytech_petra" target="_blank" class="social-icon" title="ВКонтакте">
+                <i class="fab fa-vk"></i>
+            </a>
+            <a href="https://max.ru/polytech_petra" target="_blank" class="social-icon" title="MAX">
+                <img src="media/icon-max.svg" alt="MAX" width="16" height="16">
+            </a>
+            <a href="https://t.me/polytech_petra" target="_blank" class="social-icon" title="Telegram">
+                <i class="fab fa-telegram"></i>
+            </a>
+            <a href="https://dzen.ru/polytech_petra" target="_blank" class="social-icon" title="Яндекс.Дзен">
+                <img src="media/icon-dzen.svg" alt="Дзен" width="16" height="16">
+            </a>
+        </footer>
+    </div>
+
+    <!-- FAQ чат-помощник -->
+    <button id="faq-btn" onclick="toggleFaqPanel()" title="Часто задаваемые вопросы"
+        style="position:fixed; bottom:30px; right:30px; width:52px; height:52px; border-radius:50%; background:#3a7a40; border:none; color:white; font-size:22px; font-weight:700; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.4); z-index:999; display:flex; align-items:center; justify-content:center; line-height:1; font-family:'Onest',sans-serif;">
+        ?
+    </button>
+
+    <div id="faq-panel" style="display:none; flex-direction:column; position:fixed; bottom:100px; right:30px; width:340px; max-height:480px; background:#233F26; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.5); z-index:1000; border:1px solid rgba(255,255,255,0.15); overflow:hidden;">
+        <div style="padding:15px 20px; border-bottom:1px solid rgba(255,255,255,0.15); display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color:white;">Ответы на частые вопросы</strong>
+            <span onclick="toggleFaqPanel()" style="cursor:pointer; color:white; font-size:20px;">&times;</span>
+        </div>
+        <div id="faq-list" style="overflow-y:auto; padding:15px; flex:1;"></div>
     </div>
 
     <div id="taskModal" class="modal" style="display: none;">
@@ -67,13 +136,19 @@
                 <div id="modal-posts" class="posts-list" style="display: none; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin-bottom: 15px;"></div>
                 
                 <div id="modal-file-input" style="display: none; margin-bottom: 15px;">
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>Загрузить файл (картинка/документ):</label>
-                        <input type="file" id="submission-file" class="form-input" style="display: block; margin-top: 5px; width: 100%;">
+                    <div class="submission-toggle" id="submission-toggle">
+                        <label id="lbl-file" class="active-type" onclick="setSubmissionType('file')">
+                            <input type="radio" name="sub-type" value="file" checked> Загрузить файл
+                        </label>
+                        <label id="lbl-url" onclick="setSubmissionType('url')">
+                            <input type="radio" name="sub-type" value="url"> Вставить ссылку
+                        </label>
                     </div>
-                    <div class="form-group">
-                        <label>ИЛИ вставьте ссылку (на видео в облаке):</label>
-                        <input type="url" id="submission-url" class="form-input" placeholder="https://..." style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: none;">
+                    <div id="file-upload-block">
+                        <input type="file" id="submission-file">
+                    </div>
+                    <div id="url-input-block" style="display:none;">
+                        <input type="url" id="submission-url" class="form-input" placeholder="https://..." style="width:100%; padding:10px; border-radius:5px; border:none; background:rgba(255,255,255,0.9); color:#333; margin-top:4px;">
                     </div>
                 </div>
 

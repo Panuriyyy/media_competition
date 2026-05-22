@@ -22,6 +22,8 @@
             <button class="main-tab" onclick="showMainTab('tasks')">Задания</button>
             <button class="main-tab" onclick="showMainTab('submissions')">Проверка работ</button>
             <button class="main-tab" onclick="showMainTab('rating')">Рейтинг</button>
+            <button class="main-tab" onclick="showMainTab('about')">О конкурсе</button>
+            <button class="main-tab" onclick="showMainTab('faq')">FAQ</button>
         </div>
 
         <div id="dashboard-block" class="tab-block" style="display: block;">
@@ -34,8 +36,11 @@
             </div>
             <div class="institutes-stats">
                 <h3>Активность по институтам</h3>
-                <div id="institutes-list">
-                    </div>
+                <div id="institutes-list"></div>
+            </div>
+            <div class="institutes-stats" style="margin-top: 30px;">
+                <h3>Выполнение заданий</h3>
+                <div id="tasks-stats-list"></div>
             </div>
         </div>
 
@@ -89,10 +94,10 @@
                 <h2>Рейтинг участников</h2>
                 <div class="export-actions">
                     <button class="download-btn" onclick="downloadReport('txt')"><i class="fa-solid fa-file-lines"></i> Скачать TXT</button>
-                    <button class="download-btn csv-btn" onclick="downloadReport('csv')"><i class="fa-solid fa-file-excel"></i> Скачать CSV</button>
+                    <button class="download-btn csv-btn" onclick="downloadReport('csv')"><i class="fa-solid fa-file-csv"></i> Скачать CSV</button>
+                    <button class="download-btn xlsx-btn" onclick="downloadReport('xlsx')"><i class="fa-solid fa-file-excel"></i> Скачать XLSX</button>
                 </div>
             </div>
-
             <div class="table-container">
                 <table>
                     <thead>
@@ -103,10 +108,148 @@
                             <th>Суммарный балл</th>
                         </tr>
                     </thead>
-                    <tbody id="rating-table-body">
-                        </tbody>
+                    <tbody id="rating-table-body"></tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- О КОНКУРСЕ -->
+        <div id="about-block" class="tab-block" style="display: none;">
+            <div class="submissions-header">
+                <h2>О конкурсе</h2>
+                <button class="create-btn" onclick="toggleAboutEdit()">Редактировать текст</button>
+            </div>
+
+            <div id="about-view" style="background: rgba(255,255,255,0.07); border-radius: 10px; padding: 20px; margin-bottom: 25px; min-height: 80px; white-space: pre-wrap; line-height: 1.6;">
+                Загрузка...
+            </div>
+
+            <div id="about-edit" style="display: none; margin-bottom: 25px;">
+                <textarea id="about-textarea" rows="8" style="width:100%; padding:12px; border-radius:8px; border:none; font-size:14px; resize:vertical; background:#fff; color:#333;"></textarea>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="save-btn" onclick="saveAbout()">Сохранить</button>
+                    <button class="cancel-btn" onclick="toggleAboutEdit()">Отмена</button>
+                </div>
+            </div>
+
+            <div class="submissions-header">
+                <h3 style="color:white;">Новости и объявления</h3>
+                <button class="create-btn" onclick="openNewsModal()">+ Добавить новость</button>
+            </div>
+            <div id="news-list" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- FAQ -->
+        <div id="faq-block" class="tab-block" style="display: none;">
+            <div class="submissions-header">
+                <h2>Часто задаваемые вопросы (FAQ)</h2>
+                <button class="create-btn" onclick="openFaqModal()">+ Добавить вопрос</button>
+            </div>
+            <div id="faq-admin-list" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <!-- Модалка: редактирование задания -->
+    <div id="editExistingTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редактировать задание</h2>
+                <span class="close-modal" onclick="closeEditExistingModal()">&times;</span>
+            </div>
+            <form id="editExistingTaskForm">
+                <input type="hidden" id="edit-existing-id">
+                <label>Название</label>
+                <input type="text" id="edit-existing-title" required>
+                <label>Описание</label>
+                <textarea id="edit-existing-desc" rows="4" required></textarea>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Дедлайн</label>
+                        <input type="datetime-local" id="edit-existing-deadline" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Тип</label>
+                        <select id="edit-existing-type" onchange="toggleExistingTypeSettings()">
+                            <option value="manual">Ручная</option>
+                            <option value="auto">Автоматическая (ВК)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="edit-existing-format-block" style="margin-top:15px;">
+                    <label>Формат материала</label>
+                    <select id="edit-existing-format">
+                        <option value="Ссылка">Ссылка на облако / пост</option>
+                        <option value="JPG/PNG">Изображение (JPG, PNG)</option>
+                        <option value="PDF">Документ PDF</option>
+                        <option value="DOCX">Текст Word (DOCX)</option>
+                        <option value="Видео">Ссылка на видео</option>
+                    </select>
+                </div>
+                <div id="edit-existing-auto-options" style="display:none; margin-top:15px; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px;">
+                    <label>Что проверяем?</label>
+                    <select id="edit-existing-auto-type">
+                        <option value="likes">Лайки (1 балл за пост)</option>
+                        <option value="comments">Комментарии (3 балла за пост)</option>
+                    </select>
+                    <div id="edit-existing-links-container" style="margin-top:15px;">
+                        <label>Ссылки на посты ВК:</label>
+                        <div id="edit-existing-links-list"></div>
+                        <button type="button" class="add-link-btn" onclick="addExistingLinkInput()">+ Добавить ссылку</button>
+                    </div>
+                </div>
+                <div id="edit-existing-points-container" style="margin-top:15px;">
+                    <label>Максимальный балл</label>
+                    <input type="number" id="edit-existing-points" min="1" value="10">
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="save-btn">Сохранить изменения</button>
+                    <button type="button" class="cancel-btn" onclick="closeEditExistingModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка: новость -->
+    <div id="newsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="news-modal-title">Добавить новость</h2>
+                <span class="close-modal" onclick="closeNewsModal()">&times;</span>
+            </div>
+            <form id="newsForm">
+                <input type="hidden" id="news-edit-id">
+                <label>Заголовок</label>
+                <input type="text" id="news-title-input" required>
+                <label>Текст новости</label>
+                <textarea id="news-content-input" rows="5" required></textarea>
+                <div class="modal-footer">
+                    <button type="submit" class="save-btn">Опубликовать</button>
+                    <button type="button" class="cancel-btn" onclick="closeNewsModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка: FAQ -->
+    <div id="faqModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="faq-modal-title">Добавить вопрос</h2>
+                <span class="close-modal" onclick="closeFaqModal()">&times;</span>
+            </div>
+            <form id="faqForm">
+                <input type="hidden" id="faq-edit-id">
+                <label>Вопрос</label>
+                <input type="text" id="faq-question-input" required>
+                <label>Ответ</label>
+                <textarea id="faq-answer-input" rows="4" required></textarea>
+                <label>Порядок отображения</label>
+                <input type="number" id="faq-order-input" value="0" min="0">
+                <div class="modal-footer">
+                    <button type="submit" class="save-btn">Сохранить</button>
+                    <button type="button" class="cancel-btn" onclick="closeFaqModal()">Отмена</button>
+                </div>
+            </form>
         </div>
     </div>
 
