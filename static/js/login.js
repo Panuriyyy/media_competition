@@ -3,6 +3,38 @@ let loginAttempts = 0;
 const MAX_LOGIN_ATTEMPTS = 3;
 let _resetVkToken = null;
 
+/**
+ * Проверяет ссылку на социальную сеть.
+ * @param {string} url       — введённая ссылка
+ * @param {string[]} domains — допустимые домены (без www)
+ * @param {boolean} required — обязательное ли поле
+ * @returns {string|null}    — текст ошибки или null если всё OK
+ */
+function validateSocialLink(url, domains, required) {
+    if (!url) {
+        return required ? `Укажите ссылку на профиль (${domains.join(' или ')})` : null;
+    }
+    try {
+        const parsed = new URL(url);
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+            throw new Error('bad protocol');
+        }
+        const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+        if (!domains.includes(host)) {
+            const examples = { 'vk.com': 'https://vk.com/id123', 't.me': 'https://t.me/username' };
+            const ex = examples[domains[0]] || '';
+            return `Неверный домен. Допустимо: ${domains.join(', ')}${ex ? '. Пример: ' + ex : ''}`;
+        }
+        // Путь не должен быть пустым — нужно хотя бы имя пользователя
+        if (parsed.pathname.replace(/\//g, '').length === 0) {
+            return `Укажите полную ссылку с именем профиля`;
+        }
+        return null;
+    } catch {
+        return `Введите корректную ссылку (начинается с https://)`;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('token');
     if (token) {
@@ -128,9 +160,27 @@ document.addEventListener('DOMContentLoaded', function() {
             email: document.getElementById('reg-email').value,
             password: document.getElementById('reg-password').value,
             institute: document.getElementById('reg-institute').value,
-            vk_link: document.getElementById('reg-vk').value,
-            tg_link: document.getElementById('reg-tg').value
+            vk_link: document.getElementById('reg-vk').value.trim(),
+            tg_link: document.getElementById('reg-tg').value.trim()
         };
+
+        // Валидация ссылки ВКонтакте
+        const vkError = validateSocialLink(formData.vk_link, ['vk.com', 'vk.ru'], true);
+        if (vkError) {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = vkError;
+            messageDiv.style.color = '#ff4444';
+            return;
+        }
+
+        // Валидация ссылки Telegram (необязательна, но если введена — проверяем)
+        const tgError = validateSocialLink(formData.tg_link, ['t.me', 'telegram.me'], false);
+        if (tgError) {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = tgError;
+            messageDiv.style.color = '#ff4444';
+            return;
+        }
 
         try {
             const response = await fetch(`${API_URL}/api/register`, {

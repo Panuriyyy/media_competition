@@ -1,7 +1,25 @@
 import json
+from urllib.parse import urlparse
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import datetime
 from typing import Optional, List
+
+
+def _check_domain(url: str | None, allowed: list[str], field_name: str, required: bool) -> str | None:
+    if not url:
+        return None if not required else url
+    try:
+        parsed = urlparse(url)
+        host = (parsed.hostname or '').lower().removeprefix('www.')
+        if host not in allowed:
+            raise ValueError(f"{field_name}: допустимые домены — {', '.join(allowed)}")
+        if not parsed.path.strip('/'):
+            raise ValueError(f"{field_name}: укажите полную ссылку с именем профиля")
+    except ValueError:
+        raise
+    except Exception:
+        raise ValueError(f"{field_name}: некорректная ссылка")
+    return url
 
 INSTITUTES_LIST = [
     "ГИ",
@@ -46,6 +64,16 @@ class UserCreate(BaseModel):
         if v not in INSTITUTES_LIST:
             raise ValueError("Выберите институт из предложенного списка")
         return v
+
+    @field_validator("vk_link")
+    @classmethod
+    def validate_vk_link(cls, v):
+        return _check_domain(v, ["vk.com", "vk.ru"], "Ссылка ВКонтакте", required=True)
+
+    @field_validator("tg_link")
+    @classmethod
+    def validate_tg_link(cls, v):
+        return _check_domain(v, ["t.me", "telegram.me"], "Ссылка Telegram", required=False)
 
 
 class UserOut(UserBase):
