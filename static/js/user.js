@@ -230,10 +230,12 @@ async function loadAvailableTasks() {
 
         container.innerHTML = tasks.map(t => {
             const pointsText = declOfNum(t.points_at_stake, ['балл', 'балла', 'баллов']);
+            // Убираем строку "ФОРМАТ: ..." из превью карточки
+            const displayDesc = escapeHtml(t.description.replace(/\n+ФОРМАТ:\s*\S+\s*$/i, '').trim());
             return `
             <div class="task-card">
                 <h3>${escapeHtml(t.title)}</h3>
-                <p>${t.description.length > 100 ? escapeHtml(t.description).substring(0, 100) + '...' : escapeHtml(t.description)}</p>
+                <p class="task-desc-preview">${displayDesc}</p>
                 <div class="task-footer">
                     <span style="color: #FFD700;">★ ${t.points_at_stake} ${pointsText}</span>
                     <button onclick="openTaskModal(${t.id})" class="btn-primary">Выполнить</button>
