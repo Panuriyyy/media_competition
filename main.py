@@ -101,10 +101,13 @@ async def deadline_notification_loop():
 async def lifespan(app: FastAPI):
     print("Проверка подключения к базе данных...")
 
-    try:
+    async def _check_db():
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
-            print("База данных доступна")
+
+    try:
+        await asyncio.wait_for(_check_db(), timeout=8.0)
+        print("База данных доступна")
     except Exception as e:
         print(f"Предупреждение: БД недоступна при старте ({e}). Приложение запускается.")
 
