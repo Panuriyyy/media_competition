@@ -255,21 +255,8 @@ async def login(credentials: schemas.UserLogin, db: AsyncSession = Depends(get_d
     }
 
 
-async def _find_user_by_vk_token(access_token: str, db: AsyncSession):
-    """Вспомогательная функция: находит пользователя платформы по VK access_token."""
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(
-                "https://api.vk.com/method/users.get",
-                params={"access_token": access_token, "v": "5.199"},
-            )
-            data = resp.json()
-        if "error" in data:
-            return None
-        vk_id_str = str(data["response"][0]["id"])
-    except Exception:
-        return None
-
+async def _find_user_by_vk_id(vk_id_str: str, db: AsyncSession):
+    """Находит пользователя платформы по числовому VK ID."""
     # Ищем по сохранённому числовому vk_id
     result = await db.execute(select(User).where(User.vk_id == vk_id_str))
     user = result.scalar_one_or_none()
@@ -291,11 +278,30 @@ async def _find_user_by_vk_token(access_token: str, db: AsyncSession):
                     )
                     user = user_result.scalar_one_or_none()
                     if user:
+                        # Сохраняем vk_id для быстрого поиска в будущем
                         user.vk_id = vk_id_str
                         await db.commit()
                         break
 
     return user
+
+
+async def _find_user_by_vk_token(access_token: str, db: AsyncSession):
+    """Находит пользователя по VK access_token (для сброса пароля)."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                "https://api.vk.com/method/users.get",
+                params={"access_token": access_token, "v": "5.199"},
+            )
+            data = resp.json()
+        if "error" in data:
+            return None
+        vk_id_str = str(data["response"][0]["id"])
+    except Exception:
+        return None
+
+    return await _find_user_by_vk_id(vk_id_str, db)
 
 
 @app.post("/api/auth/vk", tags=["Auth"])
@@ -304,7 +310,10 @@ async def auth_vk(
     db: AsyncSession = Depends(get_db),
 ):
     """Вход через VK ID"""
-    user = await _find_user_by_vk_token(vk_data.access_token, db)
+    # user_id уже получен от VKID SDK при обмене кода — используем напрямую,
+    # без лишнего запроса к VK API (users.get с новыми токенами VKID SDK ненадёжен)
+    vk_id_str = str(vk_data.user_id)
+    user = await _find_user_by_vk_id(vk_id_str, db)
     if not user:
         raise HTTPException(
             status_code=404,
