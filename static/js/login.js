@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         VKID.Config.init({
             app: 54503107, // Твой ID приложения
-            redirectUrl: 'http://127.0.0.1:8001/static/login.html', // Для локального теста должен быть твой локальный адрес!
+            redirectUrl: 'http://mediacompetitionspbstu.ru/static/login.html',
             responseMode: VKID.ConfigResponseMode.Callback,
             source: VKID.ConfigSource.LOWCODE,
         });
