@@ -310,10 +310,14 @@ h2 {
 }
 
 /* ===== ТАБЛИЦЫ ===== */
-.table-wrapper {
+.table-wrapper,
+.table-container {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
+    width: 100%;
+    display: block;
 }
 
 .users-table {
@@ -501,40 +505,39 @@ h2 {
 
 /* ===== АДАПТИВНОСТЬ ===== */
 @media (max-width: 768px) {
-    body { padding: 10px; }
+    body { padding: 8px; }
 
     .user-container {
-        padding: 16px;
+        padding: 14px;
         border-radius: 10px;
     }
 
     /* Шапка */
     .header {
-        flex-direction: row;
         flex-wrap: wrap;
-        gap: 10px;
-        padding-bottom: 14px;
-        margin-bottom: 16px;
+        gap: 8px;
+        padding-bottom: 12px;
+        margin-bottom: 14px;
         align-items: center;
     }
-    .header h1 { font-size: 20px; }
-    .header-right { gap: 12px; }
+    .header h1 { font-size: 18px; }
+    .header-right { gap: 10px; }
     .user-name {
-        max-width: 130px;
+        max-width: 120px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         font-size: 13px;
     }
-    .logout-btn { padding: 7px 13px; font-size: 13px; }
+    .logout-btn { padding: 6px 12px; font-size: 13px; }
 
-    /* Вкладки — горизонтальный скролл без переноса */
+    /* Вкладки — горизонтальный скролл */
     .main-tabs {
         flex-wrap: nowrap;
         overflow-x: auto;
         gap: 4px;
         padding-bottom: 8px;
-        margin-bottom: 16px;
+        margin-bottom: 14px;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
     }
@@ -542,107 +545,165 @@ h2 {
     .main-tab {
         flex-shrink: 0;
         white-space: nowrap;
-        padding: 7px 14px;
+        padding: 6px 12px;
         font-size: 13px;
     }
 
     /* Карточки заданий */
-    .tasks-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
+    .tasks-grid { grid-template-columns: 1fr; gap: 10px; }
+    .task-card { padding: 13px; }
+    .task-card h3 { font-size: 14px; margin-bottom: 6px; }
+    .task-card p { font-size: 13px; }
+    .task-footer { margin-top: 12px; padding-top: 10px; }
+
+    /* Таблицы — принудительный скролл */
+    .table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        display: block;
+        width: 100%;
     }
-    .task-card { padding: 14px; }
-    .task-card h3 { font-size: 15px; margin-bottom: 8px; }
-    .task-footer {
-        margin-top: 14px;
-        padding-top: 10px;
+    .table-container table {
+        min-width: 380px;
+        font-size: 12px !important;
+        width: max-content;
+        min-width: 100%;
+    }
+    .table-container th,
+    .table-container td {
+        padding: 7px 8px !important;
+        font-size: 12px !important;
+        white-space: nowrap;
     }
 
-    /* Таблицы */
-    .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    /* Рейтинг-баннер */
+    #user-rank-banner {
+        padding: 10px 12px;
+        gap: 12px;
+        border-radius: 8px;
+        margin-bottom: 14px;
     }
-    table { font-size: 13px; }
-    th, td { padding: 8px 10px; }
+    #user-rank-banner > div:last-child { margin-left: 0 !important; }
 
     /* Модальное окно */
     .modal-content {
-        width: 95% !important;
-        padding: 18px !important;
+        width: 96% !important;
+        padding: 16px !important;
         border-radius: 10px !important;
         max-height: 92vh;
     }
 
-    /* Панель уведомлений — на всю ширину сверху */
+    /* Панель уведомлений */
     .notifications-panel {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
+        top: 0; left: 0; right: 0;
         width: 100%;
-        max-height: 65vh;
-        border-radius: 0 0 14px 14px;
+        max-height: 60vh;
+        border-radius: 0 0 12px 12px;
         z-index: 1001;
     }
 
-    /* Рейтинг-баннер */
-    #user-rank-banner { padding: 12px 14px; gap: 14px; }
+    /* О конкурсе */
+    #about-content-user {
+        padding: 14px !important;
+        font-size: 13px;
+        margin-bottom: 20px !important;
+    }
 }
 
 @media (max-width: 480px) {
-    body { padding: 6px; }
+    body { padding: 5px; }
 
-    .user-container { padding: 12px; border-radius: 8px; }
+    .user-container { padding: 10px; border-radius: 8px; }
 
-    .header h1 { font-size: 17px; }
-    .header-right { gap: 8px; }
-    .user-name { max-width: 100px; font-size: 12px; }
-    .logout-btn { padding: 6px 10px; font-size: 12px; }
-    .notifications-icon { font-size: 20px; }
+    /* Шапка */
+    .header { gap: 6px; padding-bottom: 10px; margin-bottom: 12px; }
+    .header h1 { font-size: 16px; }
+    .header-right { gap: 6px; }
+    .user-name { max-width: 90px; font-size: 12px; }
+    .logout-btn { padding: 5px 9px; font-size: 12px; }
+    .notifications-icon { font-size: 19px; }
 
-    .main-tab { padding: 6px 10px; font-size: 12px; }
+    /* Вкладки */
+    .main-tab { padding: 5px 9px; font-size: 11px; }
+    .main-tabs { margin-bottom: 12px; }
 
-    .task-card { padding: 12px; }
-    .task-card h3 { font-size: 14px; }
+    /* Карточки */
+    .task-card { padding: 10px; }
+    .task-card h3 { font-size: 13px; }
+    .task-card p { font-size: 12px; }
     .task-footer {
         flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
-    }
-    .btn-primary { width: 100%; text-align: center; padding: 10px; }
-
-    table { font-size: 12px; }
-    th, td { padding: 7px 8px; }
-
-    /* Рейтинг-баннер — в столбик */
-    #user-rank-banner {
-        flex-direction: column;
         gap: 8px;
-        padding: 12px;
+        margin-top: 10px;
+        padding-top: 8px;
     }
-    #user-rank-place, #user-rank-score { font-size: 1.4em; }
+    .task-footer span { font-size: 12px; }
+    .btn-primary {
+        width: 100%;
+        text-align: center;
+        padding: 9px;
+        font-size: 13px;
+    }
 
-    /* Toast снизу на всю ширину */
+    /* Таблицы */
+    .table-container th,
+    .table-container td {
+        padding: 6px 7px !important;
+        font-size: 11px !important;
+    }
+
+    /* Рейтинг-баннер — компактный */
+    #user-rank-banner {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px;
+    }
+    #user-rank-banner > div { margin-left: 0 !important; }
+    #user-rank-place, #user-rank-score {
+        font-size: 1.3em !important;
+    }
+    #user-rank-banner > div > div:first-child {
+        font-size: 0.8em !important;
+    }
+
+    /* Toast снизу */
     #toast-container {
         top: auto;
-        bottom: 14px;
-        right: 10px;
-        left: 10px;
+        bottom: 12px;
+        right: 8px;
+        left: 8px;
         width: auto;
         max-width: none;
     }
+    .toast { font-size: 13px; padding: 11px 13px; }
 
-    /* FAQ кнопка */
-    #faq-btn { width: 44px; height: 44px; font-size: 19px; bottom: 20px; right: 16px; }
-    #faq-panel { width: calc(100vw - 20px); right: 10px; bottom: 80px; }
+    /* FAQ */
+    #faq-btn { width: 42px; height: 42px; font-size: 18px; bottom: 16px; right: 12px; }
+    #faq-panel { width: calc(100vw - 16px); right: 8px; bottom: 72px; }
 
-    /* Модалка задания */
+    /* Модалка */
     .modal-content {
-        width: 98% !important;
-        padding: 14px !important;
-        max-height: 95vh;
+        width: 99% !important;
+        padding: 12px !important;
+        max-height: 96vh;
     }
+
+    /* О конкурсе */
+    #about-content-user {
+        padding: 12px !important;
+        font-size: 12px;
+    }
+
+    /* Уведомления */
+    .notif-title { font-size: 13px; }
+    .notif-message { font-size: 12px; }
+    .notification-item { padding: 9px 11px; }
+
+    /* Футер */
+    .social-footer { gap: 8px; padding: 14px 0 4px; margin-top: 16px; }
+    .social-icon { width: 34px; height: 34px; font-size: 15px; }
 }
 
 /* ПРИНУДИТЕЛЬНЫЙ БЕЛЫЙ ЦВЕТ ДЛЯ КАБИНЕТА СТУДЕНТА */
