@@ -5,20 +5,21 @@ from datetime import datetime
 from typing import Optional, List
 
 
-def _check_domain(url: str | None, allowed: list[str], field_name: str, required: bool) -> str | None:
+def _check_domain(url, allowed, field_name, required):
     if not url:
-        return None if not required else url
+        return None
     try:
-        parsed = urlparse(url)
-        host = (parsed.hostname or '').lower().removeprefix('www.')
+        host = (urlparse(url).hostname or '').lower()
+        if host.startswith('www.'):
+            host = host[4:]
         if host not in allowed:
-            raise ValueError(f"{field_name}: допустимые домены — {', '.join(allowed)}")
-        if not parsed.path.strip('/'):
-            raise ValueError(f"{field_name}: укажите полную ссылку с именем профиля")
+            raise ValueError(
+                "{}: допустимые домены — {}".format(field_name, ', '.join(allowed))
+            )
     except ValueError:
         raise
     except Exception:
-        raise ValueError(f"{field_name}: некорректная ссылка")
+        raise ValueError("{}: некорректная ссылка".format(field_name))
     return url
 
 INSTITUTES_LIST = [
