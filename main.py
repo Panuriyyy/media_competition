@@ -178,6 +178,25 @@ async def register(user_data: schemas.UserCreate, db: AsyncSession = Depends(get
         except Exception:
             pass
 
+    # Проверка дублирующейся VK-ссылки (по числовому ID)
+    if vk_id_resolved:
+        result = await db.execute(select(User).where(User.vk_id == vk_id_resolved))
+        if result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=400,
+                detail="Такой аккаунт уже существует. Войдите или восстановите пароль."
+            )
+
+    # Проверка дублирующейся VK-ссылки (точное совпадение, на случай недоступности API)
+    result = await db.execute(
+        select(Participant).where(Participant.vk_participant == user_data.vk_link)
+    )
+    if result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=400,
+            detail="Такой аккаунт уже существует. Войдите или восстановите пароль."
+        )
+
     # Создаём пользователя
     new_user = User(
         name_user=user_data.full_name,
@@ -234,45 +253,31 @@ async def login(credentials: schemas.UserLogin, db: AsyncSession = Depends(get_d
     }
 
 
-@app.post("/api/auth/vk", tags=["Auth"])
-async def auth_vk(
-    vk_data: schemas.VKAuth,
-    db: AsyncSession = Depends(get_db),
-):
-    """Вход через VK ID"""
-    # Верифицируем токен через VK API и получаем числовой ID пользователя
+async def _find_user_by_vk_token(access_token: str, db: AsyncSession):
+    """Вспомогательная функция: находит пользователя платформы по VK access_token."""
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(
                 "https://api.vk.com/method/users.get",
-                params={
-                    "access_token": vk_data.access_token,
-                    "v": "5.199",
-                },
+                params={"access_token": access_token, "v": "5.199"},
             )
             data = resp.json()
-
         if "error" in data:
-            raise HTTPException(status_code=401, detail="Невалидный токен VK")
-
+            return None
         vk_id_str = str(data["response"][0]["id"])
-
-    except HTTPException:
-        raise
     except Exception:
-        raise HTTPException(status_code=500, detail="Ошибка проверки токена VK")
+        return None
 
-    # Ищем пользователя по сохранённому vk_id
+    # Ищем по сохранённому числовому vk_id
     result = await db.execute(select(User).where(User.vk_id == vk_id_str))
     user = result.scalar_one_or_none()
 
-    # Если не нашли — пробуем сопоставить по ссылке VK из профиля (для ранее зарегистрированных)
+    # Если не нашли — пробуем сопоставить по ссылке VK (для ранее зарегистрированных)
     if not user:
         parts_result = await db.execute(
             select(Participant).where(Participant.vk_participant.isnot(None))
         )
         participants = parts_result.scalars().all()
-
         async with httpx.AsyncClient(timeout=10.0) as client:
             for participant in participants:
                 if not participant.vk_participant:
@@ -284,17 +289,25 @@ async def auth_vk(
                     )
                     user = user_result.scalar_one_or_none()
                     if user:
-                        # Сохраняем vk_id для быстрых входов в будущем
                         user.vk_id = vk_id_str
                         await db.commit()
                         break
 
+    return user
+
+
+@app.post("/api/auth/vk", tags=["Auth"])
+async def auth_vk(
+    vk_data: schemas.VKAuth,
+    db: AsyncSession = Depends(get_db),
+):
+    """Вход через VK ID"""
+    user = await _find_user_by_vk_token(vk_data.access_token, db)
     if not user:
         raise HTTPException(
             status_code=404,
             detail="Аккаунт не найден. Пожалуйста, зарегистрируйтесь на платформе."
         )
-
     access_token = auth.create_access_token(data={"sub": user.login_user})
     return {
         "access_token": access_token,
@@ -302,6 +315,23 @@ async def auth_vk(
         "role": user.role_user,
         "full_name": user.name_user,
     }
+
+
+@app.post("/api/reset-password", tags=["Auth"])
+async def reset_password_vk(
+    data: schemas.ResetPasswordVK,
+    db: AsyncSession = Depends(get_db),
+):
+    """Сброс пароля через VK ID"""
+    user = await _find_user_by_vk_token(data.access_token, db)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Аккаунт не найден. Убедитесь, что ВК аккаунт привязан к платформе."
+        )
+    user.password_user = auth.get_password_hash(data.new_password)
+    await db.commit()
+    return {"message": "Пароль успешно изменён"}
 
 
 @app.get("/api/users/me", tags=["Auth"])

@@ -107,3 +107,8 @@ class SubmissionCreate(BaseModel):
 class VKAuth(BaseModel):
     access_token: str
     user_id: int
+
+
+class ResetPasswordVK(BaseModel):
+    access_token: str
+    new_password: str = Field(..., min_length=6)

@@ -31,6 +31,12 @@
                 <input type="text" id="login-username" required>
                 <label>Пароль</label>
                 <input type="password" id="login-password" required>
+                <div style="text-align:right; margin-top:5px; margin-bottom:10px;">
+                    <a href="#" onclick="openForgotPasswordModal(); return false;"
+                       style="color:rgba(255,255,255,0.55); font-size:13px; text-decoration:none;"
+                       onmouseover="this.style.color='rgba(255,255,255,0.9)'"
+                       onmouseout="this.style.color='rgba(255,255,255,0.55)'">Забыли пароль?</a>
+                </div>
                 <div class="button-group">
                     <input type="submit" value="Войти" style="width: 100%; background-color: #4CAF50; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer;">
                 </div>
@@ -66,6 +72,40 @@
             </form>
         </div>
     </div>
+    <!-- Модальное окно восстановления пароля -->
+    <div id="forgot-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#1e3a22; border-radius:14px; padding:30px; width:340px; max-width:92%; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.55);">
+            <button onclick="closeForgotPasswordModal()" style="position:absolute; top:10px; right:16px; background:none; border:none; color:rgba(255,255,255,0.6); font-size:24px; cursor:pointer; line-height:1;">&times;</button>
+
+            <!-- Шаг 1: Подтверждение через VK -->
+            <div id="reset-vk-section">
+                <h3 style="color:white; margin:0 0 8px; font-size:17px;">Восстановление пароля</h3>
+                <p style="color:rgba(255,255,255,0.65); font-size:13px; margin:0 0 20px; line-height:1.5;">
+                    Подтвердите личность через ВКонтакте — система найдёт ваш аккаунт и позволит задать новый пароль.
+                </p>
+                <div id="VkIdSdkReset" style="width:100%; max-width:280px; margin:0 auto;"></div>
+                <div id="reset-vk-error" style="color:#ff6b6b; font-size:13px; margin-top:12px; text-align:center; min-height:18px;"></div>
+            </div>
+
+            <!-- Шаг 2: Новый пароль (скрыт до авторизации через VK) -->
+            <div id="reset-password-section" style="display:none;">
+                <h3 style="color:white; margin:0 0 6px; font-size:17px;">Новый пароль</h3>
+                <p id="reset-user-name" style="color:rgba(255,255,255,0.6); font-size:13px; margin:0 0 18px;"></p>
+                <label style="color:rgba(255,255,255,0.8); font-size:13px; display:block; margin-bottom:5px;">Новый пароль</label>
+                <input type="password" id="new-password" placeholder="Минимум 6 символов"
+                    style="width:100%; padding:10px; border-radius:7px; border:none; background:rgba(255,255,255,0.12); color:white; font-size:14px; box-sizing:border-box; margin-bottom:12px; outline:none;">
+                <label style="color:rgba(255,255,255,0.8); font-size:13px; display:block; margin-bottom:5px;">Повторите пароль</label>
+                <input type="password" id="confirm-password" placeholder="Повторите пароль"
+                    style="width:100%; padding:10px; border-radius:7px; border:none; background:rgba(255,255,255,0.12); color:white; font-size:14px; box-sizing:border-box; margin-bottom:18px; outline:none;">
+                <button onclick="submitNewPassword()"
+                    style="width:100%; padding:12px; background:#4CAF50; border:none; color:white; border-radius:7px; font-size:15px; font-weight:600; cursor:pointer;">
+                    Сохранить пароль
+                </button>
+                <div id="reset-password-msg" style="font-size:13px; margin-top:10px; text-align:center; min-height:18px;"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/login.js"></script>
 </body>
 </html>
