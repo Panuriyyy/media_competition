@@ -42,6 +42,13 @@
                 <h3>Выполнение заданий</h3>
                 <div id="tasks-stats-list"></div>
             </div>
+            <div class="institutes-stats" style="margin-top: 30px;">
+                <h3>Выгрузка контактов</h3>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                    <button class="download-btn" onclick="downloadContacts('txt')"><i class="fa-solid fa-file-lines"></i> Контакты TXT</button>
+                    <button class="download-btn xlsx-btn" onclick="downloadContacts('xlsx')"><i class="fa-solid fa-file-excel"></i> Контакты XLSX</button>
+                </div>
+            </div>
         </div>
 
         <div id="tasks-block" class="tab-block" style="display: none;">
@@ -92,16 +99,9 @@
         <div id="rating-block" class="tab-block" style="display: none;">
             <div class="rating-header">
                 <h2>Рейтинг участников</h2>
-                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-                    <div class="export-actions">
-                        <button class="download-btn" onclick="downloadReport('txt')"><i class="fa-solid fa-file-lines"></i> Рейтинг TXT</button>
-                        <button class="download-btn xlsx-btn" onclick="downloadReport('xlsx')"><i class="fa-solid fa-file-excel"></i> Рейтинг XLSX</button>
-                    </div>
-                    <div class="export-actions">
-                        <span style="color:rgba(255,255,255,0.5); font-size:12px; align-self:center;">Контакты:</span>
-                        <button class="download-btn" onclick="downloadContacts('txt')"><i class="fa-solid fa-file-lines"></i> Контакты TXT</button>
-                        <button class="download-btn xlsx-btn" onclick="downloadContacts('xlsx')"><i class="fa-solid fa-file-excel"></i> Контакты XLSX</button>
-                    </div>
+                <div class="export-actions">
+                    <button class="download-btn" onclick="downloadReport('txt')"><i class="fa-solid fa-file-lines"></i> Рейтинг TXT</button>
+                    <button class="download-btn xlsx-btn" onclick="downloadReport('xlsx')"><i class="fa-solid fa-file-excel"></i> Рейтинг XLSX</button>
                 </div>
             </div>
             <div class="table-container">
@@ -184,11 +184,9 @@
                 <div id="edit-existing-format-block" style="margin-top:15px;">
                     <label>Формат материала</label>
                     <select id="edit-existing-format">
-                        <option value="Ссылка">Ссылка на облако / пост</option>
-                        <option value="JPG/PNG">Изображение (JPG, PNG)</option>
-                        <option value="PDF">Документ PDF</option>
-                        <option value="DOCX">Текст Word (DOCX)</option>
-                        <option value="Видео">Ссылка на видео</option>
+                        <option value="images">Изображение (JPG / PNG)</option>
+                        <option value="documents">Документ (DOC / DOCX / PDF)</option>
+                        <option value="video">Ссылка на видео</option>
                     </select>
                 </div>
                 <div id="edit-existing-auto-options" style="display:none; margin-top:15px; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px;">
@@ -289,11 +287,9 @@
                 <div id="format-block" style="margin-top: 15px;">
                     <label>Допустимый формат материала</label>
                     <select id="edit-formats">
-                        <option value="Ссылка">Ссылка на облако / пост</option>
-                        <option value="JPG/PNG">Изображение (JPG, PNG)</option>
-                        <option value="PDF">Документ PDF</option>
-                        <option value="DOCX">Текст Word (DOCX)</option>
-                        <option value="Видео">Ссылка на видео (YouTube/VK)</option>
+                        <option value="images">Изображение (JPG / PNG)</option>
+                        <option value="documents">Документ (DOC / DOCX / PDF)</option>
+                        <option value="video">Ссылка на видео</option>
                     </select>
                 </div>
 

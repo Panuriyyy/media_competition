@@ -350,6 +350,12 @@ function openEditExistingModal(task) {
     document.getElementById('edit-existing-auto-type').value = task.auto_type || 'likes';
     document.getElementById('edit-existing-points').value = task.points_at_stake || 10;
 
+    // Предустанавливаем формат (значения: images, documents, video)
+    const fmtSelect = document.getElementById('edit-existing-format');
+    if (fmtSelect && task.format_type) {
+        fmtSelect.value = task.format_type;
+    }
+
     // Заполняем ссылки для авто-заданий
     const linksList = document.getElementById('edit-existing-links-list');
     linksList.innerHTML = '';

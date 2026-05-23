@@ -302,25 +302,32 @@ function openTaskModal(taskId) {
         if (postsBlock) postsBlock.style.display = 'none';
         if (fileBlock) fileBlock.style.display = 'block';
 
-        const desc = task.description.toUpperCase();
+        // Определяем формат из строки "ФОРМАТ: <value>" в описании задания
+        const formatMatch = task.description.match(/ФОРМАТ:\s*(\S+)/i);
+        const formatValue = formatMatch ? formatMatch[1].toLowerCase() : '';
         const toggle = document.getElementById('submission-toggle');
 
-        if (desc.includes('ВИДЕО')) {
-            // Только ссылка — скрыть переключатель, показать URL
+        const hint = document.getElementById('file-count-hint');
+        if (formatValue === 'video') {
+            // Только ссылка — скрыть переключатель и блок файла
             if (toggle) toggle.style.display = 'none';
-            if (fileInput) fileInput.parentElement.style.display = 'none';
+            const fileUploadBlock = document.getElementById('file-upload-block');
+            if (fileUploadBlock) fileUploadBlock.style.display = 'none';
             const urlBlock = document.getElementById('url-input-block');
             if (urlBlock) urlBlock.style.display = 'block';
-            if (urlInput) urlInput.placeholder = 'Вставьте ссылку на видео';
+            if (urlInput) urlInput.placeholder = 'Вставьте ссылку на видео (YouTube, VK и др.)';
         } else {
             // Файл или ссылка — показать переключатель
             if (toggle) toggle.style.display = 'flex';
-            if (desc.includes('JPG') || desc.includes('PNG') || desc.includes('ИЗОБРАЖ')) {
+            if (formatValue === 'images') {
                 if (fileInput) fileInput.setAttribute('accept', '.jpg,.jpeg,.png');
-            } else if (desc.includes('PDF') || desc.includes('DOC')) {
-                if (fileInput) fileInput.setAttribute('accept', '.pdf,.doc,.docx');
+                if (hint) hint.textContent = 'Допустимые форматы: JPG, PNG';
+            } else if (formatValue === 'documents') {
+                if (fileInput) fileInput.setAttribute('accept', '.doc,.docx,.pdf');
+                if (hint) hint.textContent = 'Допустимые форматы: DOC, DOCX, PDF';
             } else {
                 if (fileInput) fileInput.removeAttribute('accept');
+                if (hint) hint.textContent = '';
             }
             setSubmissionType('file');
         }
@@ -457,14 +464,42 @@ async function submitTask() {
 
         let hasData = false;
 
+        // Определяем допустимые расширения по формату задания
+        const task = currentTasks.find(t => t.id === currentTaskId);
+        const formatMatch = task ? task.description.match(/ФОРМАТ:\s*(\S+)/i) : null;
+        const formatValue = formatMatch ? formatMatch[1].toLowerCase() : '';
+
+        const allowedExtensions = {
+            images: ['.jpg', '.jpeg', '.png'],
+            documents: ['.doc', '.docx', '.pdf'],
+            video: [],
+        };
+        const allowed = allowedExtensions[formatValue] || null;
+
         if (fileBlock && fileBlock.style.display !== 'none' && fileInput && fileInput.files.length > 0) {
+            // Проверяем расширения файлов
+            if (allowed && allowed.length > 0) {
+                for (const f of fileInput.files) {
+                    const ext = '.' + f.name.split('.').pop().toLowerCase();
+                    if (!allowed.includes(ext)) {
+                        return showToast(
+                            `Недопустимый формат файла "${f.name}". Разрешены: ${allowed.join(', ')}`,
+                            'error'
+                        );
+                    }
+                }
+            }
             for (const f of fileInput.files) {
                 formData.append('files', f);
             }
             hasData = true;
         }
         if (urlBlock && urlBlock.style.display !== 'none' && urlInput && urlInput.value.trim()) {
-            formData.append('submission_url', urlInput.value.trim());
+            const urlVal = urlInput.value.trim();
+            if (!urlVal.startsWith('http://') && !urlVal.startsWith('https://')) {
+                return showToast('Введите корректную ссылку (должна начинаться с http:// или https://).', 'error');
+            }
+            formData.append('submission_url', urlVal);
             hasData = true;
         }
 
@@ -501,6 +536,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const hint = document.getElementById('file-count-hint');
         if (!hint) return;
         const n = e.target.files.length;
-        hint.textContent = n > 0 ? `Выбрано файлов: ${n}` : '';
+        if (n > 0) {
+            const task = currentTasks.find(t => t.id === currentTaskId);
+            const fmtMatch = task ? task.description.match(/ФОРМАТ:\s*(\S+)/i) : null;
+            const fmtVal = fmtMatch ? fmtMatch[1].toLowerCase() : '';
+            const fmtLabel = fmtVal === 'images' ? 'JPG, PNG'
+                           : fmtVal === 'documents' ? 'DOC, DOCX, PDF' : '';
+            hint.textContent = `Выбрано файлов: ${n}` + (fmtLabel ? ` (допустимо: ${fmtLabel})` : '');
+        } else {
+            hint.textContent = '';
+        }
     });
 });
