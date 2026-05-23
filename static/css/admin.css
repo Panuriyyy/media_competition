@@ -824,17 +824,114 @@ input[type="file"]::file-selector-button:hover {
     background: rgba(255, 255, 255, 0.25);
 }
 
-/* Адаптивность для основных вкладок (6 вкладок) */
+/* ===== АДАПТИВНОСТЬ ===== */
 @media (max-width: 900px) {
-    .main-tab {
-        font-size: 14px;
-        padding: 10px 16px;
-    }
+    .main-tab { font-size: 14px; padding: 10px 14px; }
 }
 
-@media (max-width: 600px) {
-    .main-tab {
-        font-size: 12px;
-        padding: 8px 10px;
+@media (max-width: 768px) {
+    body { padding: 10px; }
+
+    .admin-container { padding: 16px; border-radius: 8px; }
+
+    /* Шапка */
+    .header {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding-bottom: 14px;
+        margin-bottom: 18px;
+        align-items: center;
     }
+    .header h1 { font-size: 20px; }
+    .header-right { gap: 10px; }
+    #admin-name {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+    .logout-btn { padding: 7px 13px; font-size: 13px; }
+
+    /* Вкладки — горизонтальный скролл */
+    .main-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 4px;
+        padding-bottom: 8px;
+        margin-bottom: 18px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .main-tabs::-webkit-scrollbar { display: none; }
+    .main-tab {
+        flex-shrink: 0;
+        white-space: nowrap;
+        font-size: 13px;
+        padding: 8px 13px;
+    }
+    .main-tab.active::after { bottom: -10px; }
+
+    /* Кнопки создания и заголовки */
+    .create-btn { padding: 9px 16px; font-size: 14px; }
+    .submissions-header, .tasks-header { gap: 10px; }
+    .task-tabs-wrapper { gap: 10px; }
+
+    /* Статистика */
+    .stats-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; }
+    .stat-item { padding: 14px; }
+    .stat-number { font-size: 26px; }
+
+    /* Таблицы — скролл по горизонтали */
+    .table-container, .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    table { font-size: 12px; min-width: 520px; }
+    th, td { padding: 8px 10px; }
+
+    /* Кнопки экспорта */
+    .rating-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .export-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .download-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+        margin-right: 0;
+        margin-bottom: 0;
+    }
+
+    /* Модальное окно */
+    .modal-content {
+        padding: 18px;
+        max-width: calc(100% - 16px);
+        max-height: 92vh;
+    }
+    .modal-content .form-row { flex-direction: column; gap: 10px; }
+    .modal-header h2 { font-size: 18px; }
+    .modal-footer { flex-direction: column; gap: 8px; }
+    .close-modal { font-size: 26px; }
+}
+
+@media (max-width: 480px) {
+    body { padding: 6px; }
+    .admin-container { padding: 12px; }
+    .header h1 { font-size: 16px; }
+    #admin-name { max-width: 110px; font-size: 12px; }
+    .logout-btn { padding: 6px 10px; font-size: 12px; }
+
+    .main-tab { font-size: 12px; padding: 7px 10px; }
+
+    .task-card { padding: 12px; }
+    .task-title { font-size: 15px; }
+    .task-actions button { padding: 5px 10px; font-size: 12px; }
+
+    table { font-size: 11px; min-width: 460px; }
+    th, td { padding: 6px 8px; }
+
+    .download-btn { padding: 7px 10px; font-size: 11px; }
+    .create-btn { padding: 8px 14px; font-size: 13px; }
 }

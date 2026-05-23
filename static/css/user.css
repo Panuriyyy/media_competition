@@ -501,45 +501,147 @@ h2 {
 
 /* ===== АДАПТИВНОСТЬ ===== */
 @media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-    
+    body { padding: 10px; }
+
     .user-container {
-        padding: 15px;
+        padding: 16px;
+        border-radius: 10px;
     }
-    
+
+    /* Шапка */
     .header {
-        flex-direction: column;
-        text-align: center;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding-bottom: 14px;
+        margin-bottom: 16px;
+        align-items: center;
     }
-    
+    .header h1 { font-size: 20px; }
+    .header-right { gap: 12px; }
+    .user-name {
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+    .logout-btn { padding: 7px 13px; font-size: 13px; }
+
+    /* Вкладки — горизонтальный скролл без переноса */
+    .main-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 4px;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .main-tabs::-webkit-scrollbar { display: none; }
+    .main-tab {
+        flex-shrink: 0;
+        white-space: nowrap;
+        padding: 7px 14px;
+        font-size: 13px;
+    }
+
+    /* Карточки заданий */
     .tasks-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
     }
-    
-    .main-tabs {
-        flex-wrap: wrap;
+    .task-card { padding: 14px; }
+    .task-card h3 { font-size: 15px; margin-bottom: 8px; }
+    .task-footer {
+        margin-top: 14px;
+        padding-top: 10px;
     }
-    
-    .main-tab {
-        flex: 1;
-        text-align: center;
-        padding: 8px;
-        font-size: 14px;
+
+    /* Таблицы */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
-    
+    table { font-size: 13px; }
+    th, td { padding: 8px 10px; }
+
+    /* Модальное окно */
+    .modal-content {
+        width: 95% !important;
+        padding: 18px !important;
+        border-radius: 10px !important;
+        max-height: 92vh;
+    }
+
+    /* Панель уведомлений — на всю ширину сверху */
     .notifications-panel {
-        width: 90%;
-        right: 5%;
-        left: 5%;
-        top: 70px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 65vh;
+        border-radius: 0 0 14px 14px;
+        z-index: 1001;
     }
-    
-    .users-table th,
-    .users-table td {
-        padding: 8px;
-        font-size: 13px;
+
+    /* Рейтинг-баннер */
+    #user-rank-banner { padding: 12px 14px; gap: 14px; }
+}
+
+@media (max-width: 480px) {
+    body { padding: 6px; }
+
+    .user-container { padding: 12px; border-radius: 8px; }
+
+    .header h1 { font-size: 17px; }
+    .header-right { gap: 8px; }
+    .user-name { max-width: 100px; font-size: 12px; }
+    .logout-btn { padding: 6px 10px; font-size: 12px; }
+    .notifications-icon { font-size: 20px; }
+
+    .main-tab { padding: 6px 10px; font-size: 12px; }
+
+    .task-card { padding: 12px; }
+    .task-card h3 { font-size: 14px; }
+    .task-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .btn-primary { width: 100%; text-align: center; padding: 10px; }
+
+    table { font-size: 12px; }
+    th, td { padding: 7px 8px; }
+
+    /* Рейтинг-баннер — в столбик */
+    #user-rank-banner {
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+    }
+    #user-rank-place, #user-rank-score { font-size: 1.4em; }
+
+    /* Toast снизу на всю ширину */
+    #toast-container {
+        top: auto;
+        bottom: 14px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+        max-width: none;
+    }
+
+    /* FAQ кнопка */
+    #faq-btn { width: 44px; height: 44px; font-size: 19px; bottom: 20px; right: 16px; }
+    #faq-panel { width: calc(100vw - 20px); right: 10px; bottom: 80px; }
+
+    /* Модалка задания */
+    .modal-content {
+        width: 98% !important;
+        padding: 14px !important;
+        max-height: 95vh;
     }
 }
 
@@ -595,6 +697,82 @@ input, select, textarea {
 
 .social-icon svg {
     display: block;
+}
+
+/* ===== TOAST-УВЕДОМЛЕНИЯ ===== */
+#toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    max-width: 360px;
+    width: calc(100% - 48px);
+}
+
+.toast {
+    background: #1a2f1c;
+    border-radius: 10px;
+    padding: 14px 16px 14px 18px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    pointer-events: all;
+    animation: toastIn 0.32s cubic-bezier(.21,1.02,.73,1) forwards;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #4CAF50;
+}
+
+.toast.error  { border-left-color: #ef5350; }
+.toast.info   { border-left-color: #42a5f5; }
+.toast.warn   { border-left-color: #ffa726; }
+
+.toast-icon {
+    font-size: 17px;
+    line-height: 1.3;
+    flex-shrink: 0;
+}
+
+.toast-message {
+    flex: 1;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 14px;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    padding: 0 0 0 4px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+    align-self: flex-start;
+}
+
+.toast-close:hover { color: rgba(255, 255, 255, 0.8); }
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(110%); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastOut {
+    from { opacity: 1; transform: translateX(0); max-height: 120px; margin-bottom: 0; }
+    to   { opacity: 0; transform: translateX(110%); max-height: 0;   margin-bottom: -10px; }
+}
+
+.toast.hiding {
+    animation: toastOut 0.28s ease forwards;
+    overflow: hidden;
 }
 
 /* ===== ЗАГРУЗКА ФАЙЛА ===== */

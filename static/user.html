@@ -24,7 +24,10 @@
         <div id="notifications-panel" class="notifications-panel" style="display: none;">
             <div class="notif-header">
                 <h3>Уведомления</h3>
-                <button id="mark-all-read" class="mark-read-btn">Все прочитаны</button>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button id="mark-all-read" class="mark-read-btn">Все прочитаны</button>
+                    <button onclick="toggleNotifications()" style="background:none; border:none; color:rgba(255,255,255,0.5); font-size:22px; line-height:1; cursor:pointer; padding:0 4px;" title="Закрыть">&times;</button>
+                </div>
             </div>
             <div id="notifications-list"></div>
         </div>

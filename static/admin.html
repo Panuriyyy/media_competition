@@ -92,10 +92,16 @@
         <div id="rating-block" class="tab-block" style="display: none;">
             <div class="rating-header">
                 <h2>Рейтинг участников</h2>
-                <div class="export-actions">
-                    <button class="download-btn" onclick="downloadReport('txt')"><i class="fa-solid fa-file-lines"></i> Скачать TXT</button>
-                    <button class="download-btn csv-btn" onclick="downloadReport('csv')"><i class="fa-solid fa-file-csv"></i> Скачать CSV</button>
-                    <button class="download-btn xlsx-btn" onclick="downloadReport('xlsx')"><i class="fa-solid fa-file-excel"></i> Скачать XLSX</button>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                    <div class="export-actions">
+                        <button class="download-btn" onclick="downloadReport('txt')"><i class="fa-solid fa-file-lines"></i> Рейтинг TXT</button>
+                        <button class="download-btn xlsx-btn" onclick="downloadReport('xlsx')"><i class="fa-solid fa-file-excel"></i> Рейтинг XLSX</button>
+                    </div>
+                    <div class="export-actions">
+                        <span style="color:rgba(255,255,255,0.5); font-size:12px; align-self:center;">Контакты:</span>
+                        <button class="download-btn" onclick="downloadContacts('txt')"><i class="fa-solid fa-file-lines"></i> Контакты TXT</button>
+                        <button class="download-btn xlsx-btn" onclick="downloadContacts('xlsx')"><i class="fa-solid fa-file-excel"></i> Контакты XLSX</button>
+                    </div>
                 </div>
             </div>
             <div class="table-container">

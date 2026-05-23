@@ -93,15 +93,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 loginAttempts = 0;
                 localStorage.setItem('token', data.access_token);
                 window.location.href = data.role === 'admin' ? 'admin.html' : 'user.html';
+            } else if (response.status === 404) {
+                // Пользователь не найден — предлагаем зарегистрироваться
+                loginAttempts = 0;
+                messageDiv.className = 'message error';
+                messageDiv.style.color = '#ff4444';
+                messageDiv.innerHTML = `${data.detail} <a href="#" onclick="showAuthTab('register'); return false;" style="color:#7ddf84; text-decoration:underline;">Зарегистрироваться?</a>`;
             } else {
+                // Неверный пароль — считаем попытки
                 loginAttempts++;
                 messageDiv.className = 'message error';
                 messageDiv.style.color = '#ff4444';
                 if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
                     loginAttempts = 0;
-                    messageDiv.innerHTML = `Неверный логин или пароль. <a href="#" onclick="openForgotPasswordModal(); return false;" style="color:#7ddf84; text-decoration:underline;">Восстановить пароль?</a>`;
+                    messageDiv.innerHTML = `Неверный пароль. <a href="#" onclick="openForgotPasswordModal(); return false;" style="color:#7ddf84; text-decoration:underline;">Восстановить пароль?</a>`;
                 } else {
-                    messageDiv.textContent = `${data.detail || 'Неверный логин или пароль'} (попытка ${loginAttempts} из ${MAX_LOGIN_ATTEMPTS})`;
+                    messageDiv.textContent = `${data.detail || 'Неверный пароль'} (попытка ${loginAttempts} из ${MAX_LOGIN_ATTEMPTS})`;
                 }
             }
         } catch (error) {

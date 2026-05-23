@@ -186,18 +186,56 @@ body {
     display: block;
 }
 
-/* Адаптивность */
-@media (max-width: 480px) {
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 600px) {
+    body { align-items: flex-start; padding-top: 16px; }
+
     .login-container {
-        padding: 25px;
-        margin: 15px;
+        padding: 24px 20px;
+        margin: 10px;
+        border-radius: 10px;
     }
-    
+
     .tab-btn {
-        font-size: 16px;
-        padding: 8px 16px;
+        font-size: 15px;
+        padding: 8px 14px;
     }
-    
+
+    .login-container label {
+        font-size: 13px;
+        margin-top: 12px;
+    }
+
+    .login-container input[type="text"],
+    .login-container input[type="password"],
+    .login-container input[type="email"],
+    .login-container input[type="url"],
+    .login-container select {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .button-group {
+        margin-top: 16px;
+    }
+
+    .button-group input[type="submit"] {
+        padding: 11px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 400px) {
+    .login-container {
+        padding: 18px 14px;
+        margin: 6px;
+    }
+
+    .tab-btn {
+        font-size: 14px;
+        padding: 7px 12px;
+    }
+
     .button-group {
         flex-direction: column;
     }

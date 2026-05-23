@@ -241,8 +241,10 @@ async def login(credentials: schemas.UserLogin, db: AsyncSession = Depends(get_d
     )
     user = result.scalar_one_or_none()
 
-    if not user or not auth.verify_password(credentials.password, user.password_user):
-        raise HTTPException(status_code=401, detail="Неверный логин или пароль.")
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден. Пожалуйста, зарегистрируйтесь.")
+    if not auth.verify_password(credentials.password, user.password_user):
+        raise HTTPException(status_code=401, detail="Неверный пароль.")
 
     access_token = auth.create_access_token(data={"sub": user.login_user})
     return {
@@ -967,6 +969,114 @@ async def get_dashboard_stats(
             for tid, name, cnt in tasks_stats
         ],
     }
+
+
+@app.get("/api/reports/contacts/txt", tags=["Admin/Stats"])
+async def export_contacts_txt(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(auth.get_current_admin),
+):
+    """Выгрузка контактных данных участников в TXT"""
+    result = await db.execute(select(User).where(User.role_user == "participant"))
+    users = result.scalars().all()
+
+    lines = [
+        "КОНТАКТЫ УЧАСТНИКОВ МЕДИАКОНКУРСА\n",
+        "=" * 50 + "\n",
+        f"Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}\n",
+        f"Всего участников: {len(users)}\n",
+        "=" * 50 + "\n\n",
+    ]
+
+    for i, user in enumerate(users, 1):
+        part_result = await db.execute(
+            select(Participant).where(Participant.id_user == user.id_user)
+        )
+        participant = part_result.scalar_one_or_none()
+        lines.append(f"{i}. {user.name_user}\n")
+        lines.append(f"   Институт: {participant.institute_participant if participant else '—'}\n")
+        lines.append(f"   Email:    {user.email_user}\n")
+        vk = participant.vk_participant if participant and participant.vk_participant else "—"
+        lines.append(f"   ВКонтакте: {vk}\n")
+        tg = participant.tg_participant if participant and participant.tg_participant else "—"
+        lines.append(f"   Telegram:  {tg}\n")
+        lines.append("\n")
+
+    return PlainTextResponse(
+        "".join(lines),
+        headers={"Content-Disposition": "attachment; filename=contacts_media.txt"},
+    )
+
+
+@app.get("/api/reports/contacts/xlsx", tags=["Admin/Stats"])
+async def export_contacts_xlsx(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(auth.get_current_admin),
+):
+    """Выгрузка контактных данных участников в XLSX"""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    result = await db.execute(select(User).where(User.role_user == "participant"))
+    users = result.scalars().all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Контакты участников"
+
+    header_fill = PatternFill(start_color="233F26", end_color="233F26", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=12)
+    header_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    thin_border = Border(
+        bottom=Side(style="thin", color="AAAAAA"),
+        right=Side(style="thin", color="DDDDDD"),
+    )
+
+    headers = ["№", "ФИО", "Институт", "Email", "ВКонтакте", "Telegram"]
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_align
+
+    ws.row_dimensions[1].height = 28
+
+    for row_idx, user in enumerate(users, 2):
+        part_result = await db.execute(
+            select(Participant).where(Participant.id_user == user.id_user)
+        )
+        participant = part_result.scalar_one_or_none()
+
+        ws.cell(row=row_idx, column=1, value=row_idx - 1).alignment = Alignment(horizontal="center")
+        ws.cell(row=row_idx, column=2, value=user.name_user)
+        ws.cell(row=row_idx, column=3, value=participant.institute_participant if participant else "—")
+        ws.cell(row=row_idx, column=4, value=user.email_user)
+        ws.cell(row=row_idx, column=5, value=participant.vk_participant if participant and participant.vk_participant else "—")
+        ws.cell(row=row_idx, column=6, value=participant.tg_participant if participant and participant.tg_participant else "—")
+
+        for col in range(1, 7):
+            ws.cell(row=row_idx, column=col).border = thin_border
+
+    for col_cells in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col_cells[0].column)
+        for cell in col_cells:
+            if cell.value:
+                max_len = max(max_len, len(str(cell.value)))
+        ws.column_dimensions[col_letter].width = min(max_len + 4, 60)
+
+    ws.freeze_panes = "A2"
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return Response(
+        content=output.read(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=contacts_media.xlsx"},
+    )
 
 
 @app.get("/api/reports/csv", tags=["Admin/Stats"])

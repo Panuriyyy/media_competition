@@ -3,6 +3,36 @@ let currentTasks = [];
 let currentTaskId = null;
 let currentTaskType = null;
 
+// ========== TOAST-УВЕДОМЛЕНИЯ ==========
+
+function showToast(message, type = 'success', duration = 4500) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const icons = { success: '✓', error: '✕', info: 'ℹ', warn: '⚠' };
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <span class="toast-icon">${icons[type] || icons.info}</span>
+        <span class="toast-message">${message}</span>
+        <button class="toast-close" onclick="dismissToast(this.closest('.toast'))">×</button>
+    `;
+
+    container.appendChild(toast);
+    setTimeout(() => dismissToast(toast), duration);
+}
+
+function dismissToast(toast) {
+    if (!toast || toast.classList.contains('hiding')) return;
+    toast.classList.add('hiding');
+    setTimeout(() => toast.remove(), 300);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (!localStorage.getItem('token')) return window.location.href = 'login.html';
 
@@ -30,6 +60,17 @@ function declOfNum(n, text_forms) {
 
 function escapeHtml(str) {
     return str ? str.replace(/[&<>]/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[m])) : '';
+}
+
+function linkify(text) {
+    if (!text) return '';
+    // Экранируем HTML, затем превращаем URL в кликабельные ссылки
+    const escaped = text.replace(/[&<>"']/g, m =>
+        ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m])
+    );
+    return escaped.replace(/(https?:\/\/[^\s<>"']+)/g,
+        url => `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#4CAF50; text-decoration:underline; word-break:break-all;">${url}</a>`
+    );
 }
 
 const TAB_BLOCKS = {
@@ -76,7 +117,11 @@ function toggleNotifications() {
     const panel = document.getElementById('notifications-panel');
     const isOpen = panel.style.display === 'block';
     panel.style.display = isOpen ? 'none' : 'block';
-    if (!isOpen) loadNotifications();
+    if (!isOpen) {
+        loadNotifications();
+        // Автоматически помечаем все как прочитанные при открытии
+        markAllNotificationsRead();
+    }
 }
 
 async function loadNotifications() {
@@ -233,7 +278,7 @@ function openTaskModal(taskId) {
     currentTaskType = task.task_type;
 
     document.getElementById('modal-task-title').textContent = task.title;
-    document.getElementById('modal-task-desc').innerHTML = escapeHtml(task.description).replace(/\n/g, '<br>');
+    document.getElementById('modal-task-desc').innerHTML = linkify(task.description).replace(/\n/g, '<br>');
 
     const fileInput = document.getElementById('submission-file');
     const urlInput = document.getElementById('submission-url');
@@ -423,7 +468,7 @@ async function submitTask() {
             hasData = true;
         }
 
-        if (!hasData) return alert('Пожалуйста, прикрепите файл или вставьте ссылку.');
+        if (!hasData) return showToast('Прикрепите файл или вставьте ссылку.', 'error');
     } else {
         formData.append('submission_url', 'auto_check_vk');
     }
@@ -437,16 +482,16 @@ async function submitTask() {
 
         if (res.ok) {
             const result = await res.json();
-            alert(result.message || 'Работа успешно отправлена!');
             closeTaskModal();
             loadAvailableTasks();
             loadHistory();
             switchUserTab('history');
+            showToast(result.message || 'Работа успешно отправлена!', 'success');
         } else {
             const err = await res.json();
-            alert(`Ошибка: ${err.detail}`);
+            showToast(err.detail || 'Не удалось отправить работу.', 'error');
         }
-    } catch (e) { alert('Ошибка соединения с сервером.'); }
+    } catch (e) { showToast('Ошибка соединения с сервером.', 'error'); }
 }
 
 // Счётчик выбранных файлов

@@ -326,6 +326,16 @@ function downloadReport(f) {
     });
 }
 
+function downloadContacts(f) {
+    fetch(`${API_URL}/api/reports/contacts/${f}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
+    .then(r => r.blob()).then(b => {
+        const a = document.createElement('a');
+        a.href = window.URL.createObjectURL(b);
+        a.download = `contacts.${f}`;
+        a.click();
+    });
+}
+
 function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 
 // ========== РЕДАКТИРОВАНИЕ ЗАДАНИЯ ==========
