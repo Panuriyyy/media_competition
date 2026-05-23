@@ -366,7 +366,7 @@ function openEditExistingModal(task) {
     document.getElementById('edit-existing-auto-type').value = task.auto_type || 'likes';
     document.getElementById('edit-existing-points').value = task.points_at_stake || 10;
 
-    // Предустанавливаем формат (значения: images, documents, video)
+    // Предустанавливаем формат (значения: изображения, документы, видео)
     const fmtSelect = document.getElementById('edit-existing-format');
     if (fmtSelect && task.format_type) {
         fmtSelect.value = task.format_type;

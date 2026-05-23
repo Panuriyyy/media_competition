@@ -310,7 +310,7 @@ function openTaskModal(taskId) {
         const toggle = document.getElementById('submission-toggle');
 
         const hint = document.getElementById('file-count-hint');
-        if (formatValue === 'video') {
+        if (formatValue === 'видео') {
             // Только ссылка — скрыть переключатель и блок файла
             if (toggle) toggle.style.display = 'none';
             const fileUploadBlock = document.getElementById('file-upload-block');
@@ -321,10 +321,10 @@ function openTaskModal(taskId) {
         } else {
             // Файл или ссылка — показать переключатель
             if (toggle) toggle.style.display = 'flex';
-            if (formatValue === 'images') {
+            if (formatValue === 'изображения') {
                 if (fileInput) fileInput.setAttribute('accept', '.jpg,.jpeg,.png');
                 if (hint) hint.textContent = 'Допустимые форматы: JPG, PNG';
-            } else if (formatValue === 'documents') {
+            } else if (formatValue === 'документы') {
                 if (fileInput) fileInput.setAttribute('accept', '.doc,.docx,.pdf');
                 if (hint) hint.textContent = 'Допустимые форматы: DOC, DOCX, PDF';
             } else {
@@ -472,9 +472,9 @@ async function submitTask() {
         const formatValue = formatMatch ? formatMatch[1].toLowerCase() : '';
 
         const allowedExtensions = {
-            images: ['.jpg', '.jpeg', '.png'],
-            documents: ['.doc', '.docx', '.pdf'],
-            video: [],
+            изображения: ['.jpg', '.jpeg', '.png'],
+            документы: ['.doc', '.docx', '.pdf'],
+            видео: [],
         };
         const allowed = allowedExtensions[formatValue] || null;
 
@@ -542,8 +542,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const task = currentTasks.find(t => t.id === currentTaskId);
             const fmtMatch = task ? task.description.match(/ФОРМАТ:\s*(\S+)/i) : null;
             const fmtVal = fmtMatch ? fmtMatch[1].toLowerCase() : '';
-            const fmtLabel = fmtVal === 'images' ? 'JPG, PNG'
-                           : fmtVal === 'documents' ? 'DOC, DOCX, PDF' : '';
+            const fmtLabel = fmtVal === 'изображения' ? 'JPG, PNG'
+                           : fmtVal === 'документы' ? 'DOC, DOCX, PDF' : '';
             hint.textContent = `Выбрано файлов: ${n}` + (fmtLabel ? ` (допустимо: ${fmtLabel})` : '');
         } else {
             hint.textContent = '';
