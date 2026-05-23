@@ -316,24 +316,40 @@ function addLinkInput() {
     document.getElementById('dynamic-links-list').appendChild(div);
 }
 
-function downloadReport(f) {
-    fetch(`${API_URL}/api/reports/${f}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
-    .then(r => r.blob()).then(b => {
+async function downloadReport(f) {
+    try {
+        const r = await fetch(`${API_URL}/api/reports/${f}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (!r.ok) {
+            let msg = `Ошибка ${r.status}`;
+            try { const d = await r.json(); msg = d.detail || msg; } catch {}
+            return alert('Ошибка загрузки рейтинга: ' + msg);
+        }
+        const b = await r.blob();
         const a = document.createElement('a');
-        a.href = window.URL.createObjectURL(b);
+        a.href = URL.createObjectURL(b);
         a.download = `rating.${f}`;
         a.click();
-    });
+    } catch (e) { alert('Ошибка соединения с сервером'); }
 }
 
-function downloadContacts(f) {
-    fetch(`${API_URL}/api/reports/contacts/${f}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
-    .then(r => r.blob()).then(b => {
+async function downloadContacts(f) {
+    try {
+        const r = await fetch(`${API_URL}/api/reports/contacts/${f}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (!r.ok) {
+            let msg = `Ошибка ${r.status}`;
+            try { const d = await r.json(); msg = d.detail || msg; } catch {}
+            return alert('Ошибка загрузки контактов: ' + msg);
+        }
+        const b = await r.blob();
         const a = document.createElement('a');
-        a.href = window.URL.createObjectURL(b);
+        a.href = URL.createObjectURL(b);
         a.download = `contacts.${f}`;
         a.click();
-    });
+    } catch (e) { alert('Ошибка соединения с сервером'); }
 }
 
 function logout() { localStorage.clear(); window.location.href = 'login.html'; }
