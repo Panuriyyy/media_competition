@@ -33,3 +33,4 @@ __pycache__/
 Thumbs.db
 
 .env
+reset_and_init.py
