@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         VKID.Config.init({
             app: 54503107, // Твой ID приложения
-            redirectUrl: 'http://mediacompetitionspbstu.ru/static/login.html',
+            redirectUrl: 'https://mediacompetitionspbstu.ru/static/login.html',
             responseMode: VKID.ConfigResponseMode.Callback,
             source: VKID.ConfigSource.LOWCODE,
         });
