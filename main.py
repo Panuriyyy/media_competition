@@ -169,6 +169,15 @@ async def register(user_data: schemas.UserCreate, db: AsyncSession = Depends(get
             status_code=400, detail="Пользователь с таким email уже существует."
         )
 
+    # Пробуем получить числовой VK ID из ссылки при регистрации
+    vk_id_resolved = None
+    if user_data.vk_link:
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                vk_id_resolved = await vk_service.extract_user_id(user_data.vk_link, client)
+        except Exception:
+            pass
+
     # Создаём пользователя
     new_user = User(
         name_user=user_data.full_name,
@@ -176,6 +185,7 @@ async def register(user_data: schemas.UserCreate, db: AsyncSession = Depends(get
         email_user=user_data.email,
         password_user=auth.get_password_hash(user_data.password),
         role_user="participant",
+        vk_id=vk_id_resolved,
     )
     db.add(new_user)
     await db.flush()
@@ -214,6 +224,76 @@ async def login(credentials: schemas.UserLogin, db: AsyncSession = Depends(get_d
 
     if not user or not auth.verify_password(credentials.password, user.password_user):
         raise HTTPException(status_code=401, detail="Неверный логин или пароль.")
+
+    access_token = auth.create_access_token(data={"sub": user.login_user})
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "role": user.role_user,
+        "full_name": user.name_user,
+    }
+
+
+@app.post("/api/auth/vk", tags=["Auth"])
+async def auth_vk(
+    vk_data: schemas.VKAuth,
+    db: AsyncSession = Depends(get_db),
+):
+    """Вход через VK ID"""
+    # Верифицируем токен через VK API и получаем числовой ID пользователя
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                "https://api.vk.com/method/users.get",
+                params={
+                    "access_token": vk_data.access_token,
+                    "v": "5.199",
+                },
+            )
+            data = resp.json()
+
+        if "error" in data:
+            raise HTTPException(status_code=401, detail="Невалидный токен VK")
+
+        vk_id_str = str(data["response"][0]["id"])
+
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Ошибка проверки токена VK")
+
+    # Ищем пользователя по сохранённому vk_id
+    result = await db.execute(select(User).where(User.vk_id == vk_id_str))
+    user = result.scalar_one_or_none()
+
+    # Если не нашли — пробуем сопоставить по ссылке VK из профиля (для ранее зарегистрированных)
+    if not user:
+        parts_result = await db.execute(
+            select(Participant).where(Participant.vk_participant.isnot(None))
+        )
+        participants = parts_result.scalars().all()
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            for participant in participants:
+                if not participant.vk_participant:
+                    continue
+                resolved = await vk_service.extract_user_id(participant.vk_participant, client)
+                if resolved == vk_id_str:
+                    user_result = await db.execute(
+                        select(User).where(User.id_user == participant.id_user)
+                    )
+                    user = user_result.scalar_one_or_none()
+                    if user:
+                        # Сохраняем vk_id для быстрых входов в будущем
+                        user.vk_id = vk_id_str
+                        await db.commit()
+                        break
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Аккаунт не найден. Пожалуйста, зарегистрируйтесь на платформе."
+        )
 
     access_token = auth.create_access_token(data={"sub": user.login_user})
     return {

@@ -27,6 +27,7 @@ class User(Base):
     email_user = Column(String(50), unique=True, nullable=False)
     password_user = Column(String(255), nullable=False)
     role_user = Column(String(20), default="participant")
+    vk_id = Column(String(50), nullable=True, unique=True, index=True)
 
     # Связи
     participant = relationship(
