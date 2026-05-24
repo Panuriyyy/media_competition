@@ -99,15 +99,6 @@ async def deadline_notification_loop():
 # Lifespan
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Проверка подключения к базе данных...")
-
-    try:
-        async with engine.connect() as conn:
-            await conn.execute(text("SELECT 1"))
-            print("База данных доступна")
-    except Exception as e:
-        print(f"Предупреждение: БД не ответила при старте ({e})")
-
     task = asyncio.create_task(deadline_notification_loop())
 
     yield
