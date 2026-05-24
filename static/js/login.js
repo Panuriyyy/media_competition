@@ -45,62 +45,59 @@ document.addEventListener('DOMContentLoaded', function() {
     // ВХОД ЧЕРЕЗ VK ID (LOW-CODE ВИДЖЕТ)
     // ==========================================
     if ('VKIDSDK' in window) {
-        const VKID = window.VKIDSDK;
+        try {
+            const VKID = window.VKIDSDK;
 
-        VKID.Config.init({
-            app: 54503107, // Твой ID приложения
-            redirectUrl: 'https://mediacompetitionspbstu.ru/static/login.html',
-            responseMode: VKID.ConfigResponseMode.Callback,
-            source: VKID.ConfigSource.LOWCODE,
-        });
-
-        const oneTap = new VKID.OneTap();
-        const container = document.getElementById('VkIdSdkOneTap');
-
-        if (container) {
-            oneTap.render({
-                container: container,
-                showAlternativeLogin: true
-            })
-            .on(VKID.WidgetEvents.ERROR, function(error) {
-                console.error('Ошибка виджета VK:', error);
-            })
-            .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
-                const code = payload.code;
-                const deviceId = payload.device_id;
-
-                // Меняем код на токен ВК
-                VKID.Auth.exchangeCode(code, deviceId)
-                    .then(vkidOnSuccess)
-                    .catch(function(err) { console.error('Ошибка обмена кода:', err); });
+            VKID.Config.init({
+                app: 54503107,
+                redirectUrl: 'https://mediacompetitionspbstu.ru/static/login.html',
+                responseMode: VKID.ConfigResponseMode.Callback,
+                source: VKID.ConfigSource.LOWCODE,
             });
-        }
 
-        // Эта функция срабатывает, когда ВК успешно авторизовал пользователя
-        async function vkidOnSuccess(data) {
-            try {
-                // Отправляем токен ВКонтакте на НАШ сервер для проверки и входа
-                const response = await fetch(`${API_URL}/api/auth/vk`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        access_token: data.access_token,
-                        user_id: data.user_id
-                    })
+            const oneTap = new VKID.OneTap();
+            const container = document.getElementById('VkIdSdkOneTap');
+
+            if (container) {
+                oneTap.render({
+                    container: container,
+                    showAlternativeLogin: true
+                })
+                .on(VKID.WidgetEvents.ERROR, function(error) {
+                    console.error('Ошибка виджета VK:', error);
+                })
+                .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
+                    const code = payload.code;
+                    const deviceId = payload.device_id;
+                    VKID.Auth.exchangeCode(code, deviceId)
+                        .then(vkidOnSuccess)
+                        .catch(function(err) { console.error('Ошибка обмена кода:', err); });
                 });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    // Сервер нас пустил! Сохраняем токен и заходим
-                    localStorage.setItem('token', result.access_token);
-                    window.location.href = result.role === 'admin' ? 'admin.html' : 'user.html';
-                } else {
-                    alert('Ошибка сервера: ' + result.detail);
-                }
-            } catch (error) {
-                alert('Сбой сети при входе через ВКонтакте');
             }
+
+            async function vkidOnSuccess(data) {
+                try {
+                    const response = await fetch(`${API_URL}/api/auth/vk`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            access_token: data.access_token,
+                            user_id: data.user_id
+                        })
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        localStorage.setItem('token', result.access_token);
+                        window.location.href = result.role === 'admin' ? 'admin.html' : 'user.html';
+                    } else {
+                        alert('Ошибка сервера: ' + result.detail);
+                    }
+                } catch (error) {
+                    alert('Сбой сети при входе через ВКонтакте');
+                }
+            }
+        } catch (e) {
+            console.warn('VK ID SDK не удалось инициализировать:', e);
         }
     }
 
@@ -261,18 +258,23 @@ function initResetVkWidget() {
     if (!container) return;
     container.innerHTML = '';
 
-    const resetOneTap = new VKID.OneTap();
-    resetOneTap.render({ container: container, showAlternativeLogin: false })
-        .on(VKID.WidgetEvents.ERROR, function (error) {
-            document.getElementById('reset-vk-error').textContent = 'Ошибка VK: ' + (error.text || 'неизвестная ошибка');
-        })
-        .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
-            VKID.Auth.exchangeCode(payload.code, payload.device_id)
-                .then(handleResetVkAuth)
-                .catch(function () {
-                    document.getElementById('reset-vk-error').textContent = 'Ошибка получения токена VK. Попробуйте ещё раз.';
-                });
-        });
+    try {
+        const resetOneTap = new VKID.OneTap();
+        resetOneTap.render({ container: container, showAlternativeLogin: false })
+            .on(VKID.WidgetEvents.ERROR, function (error) {
+                document.getElementById('reset-vk-error').textContent = 'Ошибка VK: ' + (error.text || 'неизвестная ошибка');
+            })
+            .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
+                VKID.Auth.exchangeCode(payload.code, payload.device_id)
+                    .then(handleResetVkAuth)
+                    .catch(function () {
+                        document.getElementById('reset-vk-error').textContent = 'Ошибка получения токена VK. Попробуйте ещё раз.';
+                    });
+            });
+    } catch (e) {
+        document.getElementById('reset-vk-error').textContent = 'VK ID SDK недоступен в вашем браузере.';
+        console.warn('VK reset widget init failed:', e);
+    }
 }
 
 async function handleResetVkAuth(data) {
