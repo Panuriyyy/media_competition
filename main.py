@@ -106,8 +106,7 @@ async def lifespan(app: FastAPI):
             await conn.execute(text("SELECT 1"))
             print("База данных доступна")
     except Exception as e:
-        print(f"Ошибка подключения: {e}")
-        raise
+        print(f"Предупреждение: БД не ответила при старте ({e})")
 
     task = asyncio.create_task(deadline_notification_loop())
 
