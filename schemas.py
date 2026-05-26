@@ -53,6 +53,14 @@ class UserLogin(BaseModel):
 class UserCreate(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100)
     username: str = Field(..., min_length=3, max_length=50)
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_full_name(cls, v):
+        import re
+        if not re.fullmatch(r"[А-ЯЁа-яё\s\-]+", v.strip()):
+            raise ValueError("ФИО должно содержать только русские буквы")
+        return v.strip()
     email: EmailStr
     password: str = Field(..., min_length=6)
     institute: str

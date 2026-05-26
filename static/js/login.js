@@ -161,6 +161,14 @@ document.addEventListener('DOMContentLoaded', function() {
             tg_link: document.getElementById('reg-tg').value.trim()
         };
 
+        // Валидация ФИО
+        if (!/^[А-ЯЁа-яё\s\-]+$/.test(formData.full_name.trim())) {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = 'ФИО должно содержать только русские буквы';
+            messageDiv.style.color = '#ff4444';
+            return;
+        }
+
         // Валидация ссылки ВКонтакте
         const vkError = validateSocialLink(formData.vk_link, ['vk.com', 'vk.ru'], true);
         if (vkError) {
