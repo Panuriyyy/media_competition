@@ -699,6 +699,20 @@ async def archive_task(
     return {"status": "success", "message": "Задание архивировано"}
 
 
+@app.post("/api/admin/tasks/{task_id}/unarchive", tags=["Admin/Tasks"])
+async def unarchive_task(
+    task_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(auth.get_current_admin),
+):
+    """Восстановление задания из архива"""
+    await db.execute(
+        update(Task).where(Task.id_tasks == task_id).values(is_active=True)
+    )
+    await db.commit()
+    return {"status": "success", "message": "Задание восстановлено"}
+
+
 @app.delete("/api/admin/tasks/{task_id}", tags=["Admin/Tasks"])
 async def delete_task(
     task_id: int,

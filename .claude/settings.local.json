@@ -3,7 +3,12 @@
     "allow": [
       "Bash(python admin.py)",
       "Bash(pip install *)",
-      "Bash(python -c \"import main\")"
+      "Bash(python -c \"import main\")",
+      "mcp__7592ac87-866c-4ce4-8901-32efbf4e0ab9__generate_diagram",
+      "Bash(node -e \"require\\('C:/Users/Таня/AppData/Roaming/npm/node_modules/docx'\\); console.log\\('ok'\\)\")",
+      "Bash(node gen_tests.js)",
+      "Bash(Get-Item \"C:\\\\Users\\\\Таня\\\\Desktop\\\\флешка\\\\4 курс\\\\Диплом\\\\media_competition\\\\test_cases.docx\")",
+      "Bash(Select-Object Name, Length)"
     ]
   }
 }

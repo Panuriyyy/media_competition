@@ -109,6 +109,7 @@ async function loadTasks() {
                         <button onclick='openEditExistingModal(${JSON.stringify(t)})'>Изменить</button>
                         <button class="btn-danger" onclick="archiveTask(${t.id})">В архив</button>
                     ` : `
+                        <button onclick="unarchiveTask(${t.id})">Восстановить</button>
                         <button class="btn-danger" onclick="deleteTask(${t.id})">Удалить</button>
                     `}
                 </div>
@@ -123,6 +124,15 @@ async function loadTasks() {
 async function archiveTask(id) {
     if (!confirm('Перенести задание в архив?')) return;
     await fetch(`${API_URL}/api/admin/tasks/${id}/archive`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+    loadTasks();
+}
+
+async function unarchiveTask(id) {
+    if (!confirm('Восстановить задание из архива?')) return;
+    await fetch(`${API_URL}/api/admin/tasks/${id}/unarchive`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });
